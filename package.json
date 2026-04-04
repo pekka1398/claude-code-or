@@ -1,5 +1,5 @@
 {
-    "name": "claude-js",
+    "name": "claude-code-or",
     "version": "1.0.0",
     "type": "module",
     "workspaces": [

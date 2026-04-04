@@ -1,72 +1,89 @@
-# Claude Code Best (CCB) 🚀
+# 🚀 Claude-OR: The Unlocked Power of Claude Code
 
-![GitHub Stars](https://img.shields.io/github/stars/claude-code-best/claude-code) ![GitHub Contributors](https://img.shields.io/github/contributors/claude-code-best/claude-code) ![GitHub Issues](https://img.shields.io/github/issues/claude-code-best/claude-code) ![GitHub License](https://img.shields.io/github/license/claude-code-best/claude-code) ![Last Commit](https://img.shields.io/github/last-commit/claude-code-best/claude-code) ![Bun Discord](https://img.shields.io/discord/820464817551048704)
+A high-performance, fully-unlocked fork of [Claude Code CLI](https://docs.anthropic-ai.com/en/docs/claude-code), specifically optimized for **OpenRouter**, **Gemini-STT**, and cost efficiency.
 
-> **Which Claude do you like? The open source one is the best.**
-
-**牢 A (Anthropic) 官方 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI 工具的源碼反編譯/逆向還原項目。** 
-目標是將 Claude Code 大部分功能及工程化能力復現 (問就是老佛爺已經付過錢了)。雖然很難繃, 但是它叫做 CCB (踩踩背)...
+> **Credit**: This project is built upon the excellent reverse-engineering work of [claude-code-best/claude-code](https://github.com/claude-code-best/claude-code.git).
 
 ---
 
-## 🛠 發展進度表
+## ✨ Key Enhancements in This Fork
 
-- [x] **V4** — 測試補全、Buddy 虛擬寵物、Auto Mode、環境變數 Feature 開關
-- [x] **V5** — Sentry / GrowthBook 企業監控、自定義 Login、OpenAI 兼容、Web Search、Computer Use / Chrome Use、Voice Mode (語音模式)、Bridge Mode、/dream 記憶整理
-- [x] **V6** — **大規模重構石山代碼，全面模組分包（全新分支，main 封存為歷史版本）**
-- [x] **V6+ (Fork 特調版)** — **OpenRouter 深度集成、Prompt Cache 命中率解鎖、Gemini-STT 語音轉錄適配。**
+### 🌐 Native OpenRouter Integration
+- **Universal Provider**: Seamlessly route all requests through [OpenRouter](https://openrouter.ai/).
+- **Model Freedom**: Use `Claude 3.5 Sonnet`, `Opus`, `Gemini 3 Flash`, or any compatible model by setting `CLAUDE_CODE_MODEL`.
+- **Intelligent Mapping**: Automatic translation of canonical model names to OpenRouter identifiers.
+
+### 💰 Cost Optimization (Prompt Caching)
+- **1st Party Status Spoofing**: Forces the CLI to treat OpenRouter as a first-party provider.
+- **Active Caching Headers**: Injects `anthropic-beta: prompt-caching-2024-07-31` and `cache_control` tags.
+- **Save up to 90%**: Full support for prompt caching hits on compatible backends (Bedrock, Vertex, etc.).
+
+### 🎙️ Voice Mode (STT) Reconstruction
+- **Push-to-Talk**: Hold **Space** to record your voice directly in the terminal.
+- **Gemini-Powered STT**: Fast, accurate transcription using `Gemini 3 Flash` via OpenRouter.
+- **Low Latency**: Optimized PCM-to-WAV bridge for instant processing.
+
+### 🐧 Unlocked Premium Features
+- **Claude Buddy**: The virtual pet companion is now fully enabled. Use `/buddy` to summon your deterministic companion!
+- **Session Memory**: Advanced context summarization enabled. Use `/summary` to get a condensed view of long conversations.
+- **Work Memory**: Enhanced session storage management for persistent context across restarts.
 
 ---
 
-## � 快速開始 (安裝版)
+## 🛠️ Quick Start
 
-**不用克隆倉庫, 從 NPM 下載後, 直接使用：**
+### 1. Requirements
+- [Bun](https://bun.sh/) >= 1.4.0 (Recommended)
+- `sox` and `alsa-utils` (For Linux voice recording)
+- An OpenRouter API Key.
 
+### 2. Installation
 ```bash
-bun i -g claude-code-best
-bun pm -g trust claude-code-best
-ccb # 直接打開 claude code
-```
-
-> **國內對 GitHub 網絡較差的，可以設置這個環境變數：**
-> `DEFAULT_RELEASE_BASE=https://ghproxy.net/https://github.com/microsoft/ripgrep-prebuilt/releases/download/v15.0.1`
-
----
-
-## 🏗 快速開始 (源碼版 / 特調編譯版)
-
-如果您想要體驗我們的 **OpenRouter 節省費用 (Prompt Caching)** 以及 **語音聲控** 功能，請克隆後自行編譯：
-
-### 環境要求
-- **Bun** >= 1.3.11 (一定要更新啊！`bun upgrade`)
-- 常規的配置 CC 的方式, 各大提供商都有自己的配置方式 (我們已內建 OpenRouter 支援)。
-
-### 編譯您的 `claude-or`
-```bash
+git clone https://github.com/YOUR_USERNAME/claude-code-or.git
+cd claude-code-or
 bun install
-bun build src/entrypoints/cli.tsx --compile --outfile claude-or
-sudo mv claude-or /usr/local/bin/
 ```
 
-### 必備環境變數
+### 3. Setup Environment
+Create a `.env` or export variables:
 ```bash
-export OPENROUTER_API_KEY=您的Key
-# 如果要啟用專屬紀錄
-export DISABLE_OPENROUTER_LOG=false
+export OPENROUTER_API_KEY="your_api_key_here"
+# Optional: Choose your primary model
+export CLAUDE_CODE_MODEL="anthropic/claude-3.5-sonnet"
+```
+
+### 4. Build & Run
+```bash
+# Build the standalone binary
+bun run build
+
+# Run directly
+./claude-or
 ```
 
 ---
 
-## ✨ 本分支特點 (Enhanced Features)
+## 🏗️ Status Checklist
 
-1. **Prompt Cache 全面啟動**：修正了原本非原廠 API 會關閉快取的 BUG。在 OpenRouter (Bedrock/Vertex) 上可節省 10x 的費用。
-2. **語音即時輸入**：按住 **Space** 錄音，透過 Gemini 3 Flash 在 1 秒內回傳轉錄結果。
-3. **Buddy 寵物解禁**：`/buddy` 隨時待命。
-4. **低延遲串流**：開啟 `eager_input_streaming`，體感速度媲美原廠。
+| Feature | Status | Description |
+| :--- | :---: | :--- |
+| **OpenRouter Support** | ✅ | Native bridge with error handling |
+| **Prompt Caching** | ✅ | First-party header injection enabled |
+| **Voice Mode (STT)** | ✅ | Gemini 3 Flash bridge via OpenRouter |
+| **Buddy Pet** | ✅ | UI and logic fully activated |
+| **Session Memory** | ✅ | Manual/Auto summarization bridge |
+| **Multi-Project Resume** | ⚠️ | Use `/resume` and press `a` to see all projects |
 
 ---
 
-## ⚖️ 許可證
-本項目僅供學習研究用途。Claude Code 的所有權利歸 Anthropic 所有。 
-如果您想要私人諮詢服務，可以發送郵件到 `claude-code-best@proton.me`，備註諮詢與聯繫方式即可。
-由於後續工作非常多, 可能會忽略郵件, 半天沒回復, 可以多發。
+## 📜 Usage Tips
+
+- **Voice Command**: Ensure your microphone is calibrated. Hold `Space` until you finish speaking.
+- **Budgeting**: Use the `/cost` command to see the current session's estimated usage.
+- **Virtual Pet**: Your Buddy's appearance is deterministic based on your user ID. Can you find them all?
+
+## ⚖️ License & Disclaimer
+
+This project is for educational and research purposes only. **Claude Code** is a product of [Anthropic](https://www.anthropic.com/). All rights reserved by the original authors.
+
+Special thanks to the original deobfuscation efforts that made this bridge possible.
