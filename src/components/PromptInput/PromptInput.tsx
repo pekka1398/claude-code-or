@@ -309,7 +309,7 @@ function PromptInput({
   const {
     companion: _companion,
     companionMuted
-  } = feature('BUDDY') ? getGlobalConfig() : {
+  } = (true /* forced */) ? getGlobalConfig() : {
     companion: undefined,
     companionMuted: undefined
   };
@@ -1786,7 +1786,7 @@ function PromptInput({
       }
       switch (footerItemSelected) {
         case 'companion':
-          if (feature('BUDDY')) {
+          if ((true /* forced */)) {
             selectFooterItem(null);
             void onSubmit('/buddy');
           }
@@ -1981,7 +1981,7 @@ function PromptInput({
     });
   }, [effortNotificationText, addNotification, removeNotification]);
   useBuddyNotification();
-  const companionSpeaking = feature('BUDDY') ?
+  const companionSpeaking = (true /* forced */) ?
   // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
   useAppState(s => s.companionReaction !== undefined) : false;
   const {

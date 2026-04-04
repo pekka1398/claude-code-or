@@ -1,5 +1,8 @@
 import Anthropic, { type ClientOptions } from '@anthropic-ai/sdk'
 import { randomUUID } from 'crypto'
+import { appendFile } from 'fs/promises'
+import { join } from 'path'
+import { getClaudeConfigHomeDir } from 'src/utils/envUtils.js'
 import type { GoogleAuth } from 'google-auth-library'
 import {
   checkAndRefreshOAuthTokenIfNeeded,
@@ -155,7 +158,7 @@ export async function getAnthropicClient({
     // Use region override for small fast model if specified
     const awsRegion =
       model === getSmallFastModel() &&
-      process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
+        process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
         ? process.env.ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION
         : getAWSRegion()
 
@@ -265,27 +268,27 @@ export async function getAnthropicClient({
 
     const googleAuth = isEnvTruthy(process.env.CLAUDE_CODE_SKIP_VERTEX_AUTH)
       ? ({
-          // Mock GoogleAuth for testing/proxy scenarios
-          getClient: () => ({
-            getRequestHeaders: () => ({}),
-          }),
-        } as unknown as GoogleAuth)
+        // Mock GoogleAuth for testing/proxy scenarios
+        getClient: () => ({
+          getRequestHeaders: () => ({}),
+        }),
+      } as unknown as GoogleAuth)
       : new GoogleAuth({
-          scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-          // Only use ANTHROPIC_VERTEX_PROJECT_ID as last resort fallback
-          // This prevents the 12-second metadata server timeout when:
-          // - No project env vars are set AND
-          // - No credential keyfile is specified AND
-          // - ADC file exists but lacks project_id field
-          //
-          // Risk: If auth project != API target project, this could cause billing/audit issues
-          // Mitigation: Users can set GOOGLE_CLOUD_PROJECT to override
-          ...(hasProjectEnvVar || hasKeyFile
-            ? {}
-            : {
-                projectId: process.env.ANTHROPIC_VERTEX_PROJECT_ID,
-              }),
-        })
+        scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+        // Only use ANTHROPIC_VERTEX_PROJECT_ID as last resort fallback
+        // This prevents the 12-second metadata server timeout when:
+        // - No project env vars are set AND
+        // - No credential keyfile is specified AND
+        // - ADC file exists but lacks project_id field
+        //
+        // Risk: If auth project != API target project, this could cause billing/audit issues
+        // Mitigation: Users can set GOOGLE_CLOUD_PROJECT to override
+        ...(hasProjectEnvVar || hasKeyFile
+          ? {}
+          : {
+            projectId: process.env.ANTHROPIC_VERTEX_PROJECT_ID,
+          }),
+      })
 
     const vertexArgs: ConstructorParameters<typeof AnthropicVertex>[0] = {
       ...ARGS,
@@ -305,7 +308,7 @@ export async function getAnthropicClient({
       : undefined,
     // Set baseURL from OAuth config when using staging OAuth
     ...(process.env.USER_TYPE === 'ant' &&
-    isEnvTruthy(process.env.USE_STAGING_OAUTH)
+      isEnvTruthy(process.env.USE_STAGING_OAUTH)
       ? { baseURL: getOauthConfig().BASE_API_URL }
       : {}),
     ...ARGS,
@@ -378,9 +381,28 @@ function buildFetch(
       // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
       const url = input instanceof Request ? input.url : String(input)
       const id = headers.get(CLIENT_REQUEST_ID_HEADER)
+      const urlString = new URL(url).pathname
       logForDebugging(
-        `[API REQUEST] ${new URL(url).pathname}${id ? ` ${CLIENT_REQUEST_ID_HEADER}=${id}` : ''} source=${source ?? 'unknown'}`,
+        `[API REQUEST] ${urlString}${id ? ` ${CLIENT_REQUEST_ID_HEADER}=${id}` : ''} source=${source ?? 'unknown'}`,
       )
+
+      // OpenRouter payload logging
+      if (process.env.OPENROUTER_API_KEY && !isEnvTruthy(process.env.DISABLE_OPENROUTER_LOG)) {
+        const logDir = getClaudeConfigHomeDir()
+        const logFile = join(logDir, 'openrouter_api.log')
+        const timestamp = new Date().toISOString()
+        const redactedHeaders: Record<string, string> = {}
+        headers.forEach((v, k) => {
+          redactedHeaders[k] = (k.toLowerCase() === 'authorization' || k.toLowerCase() === 'x-api-key') ? '[REDACTED]' : v
+        })
+
+        const logEntry = `\n--- [${timestamp}] [${id || 'no-id'}] ---\n` +
+          `URL: ${url}\n` +
+          `Headers: ${JSON.stringify(redactedHeaders, null, 2)}\n` +
+          `Body: ${init?.body || 'no body'}\n`
+
+        void appendFile(logFile, logEntry).catch(() => { })
+      }
     } catch {
       // never let logging crash the fetch
     }

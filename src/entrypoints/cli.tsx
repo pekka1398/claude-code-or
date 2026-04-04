@@ -1,5 +1,8 @@
 // Runtime polyfill for bun:bundle (build-time macros)
-const feature = (_name: string) => false;
+const feature = (name: string) => {
+    if (name === 'BUDDY') return true;
+    return false;
+};
 if (typeof globalThis.MACRO === "undefined") {
     (globalThis as any).MACRO = {
         VERSION: "2.1.888",
@@ -31,6 +34,7 @@ if (process.env.CLAUDE_CODE_REMOTE === "true") {
         : "--max-old-space-size=8192";
 }
 
+
 // Harness-science L0 ablation baseline. Inlined here (not init.ts) because
 // BashTool/AgentTool/PowerShellTool capture DISABLE_BACKGROUND_TASKS into
 // module-level consts at import time — init() runs too late. feature() gate
@@ -58,6 +62,28 @@ if (feature("ABLATION_BASELINE") && process.env.CLAUDE_CODE_ABLATION_BASELINE) {
  */
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
+
+    // OpenRouter integration
+    if (process.env.OPENROUTER_API_KEY) {
+        // Determine if we should use OpenRouter
+        const useOpenRouter = !process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === "";
+
+        if (useOpenRouter) {
+            process.env.ANTHROPIC_BASE_URL ??= "https://openrouter.ai/api";
+            process.env.ANTHROPIC_AUTH_TOKEN ??= process.env.OPENROUTER_API_KEY;
+            // Explicitly empty string as per OpenRouter docs
+            process.env.ANTHROPIC_API_KEY = "";
+
+            // Disable first-party only features that might break OpenRouter
+            process.env.CLAUDE_CODE_DISABLE_LEGACY_MODEL_REMAP ??= "true";
+
+            // Log that we are using OpenRouter (only in interactive mode or if debug is enabled)
+            if (!args.includes("--print") && !args.includes("-p")) {
+                // biome-ignore lint/suspicious/noConsole:: intentional console output
+                console.log("\x1b[38;5;208m●\x1b[0m OpenRouter bridge active");
+            }
+        }
+    }
 
     // Fast-path for --version/-v: zero module loading needed
     if (

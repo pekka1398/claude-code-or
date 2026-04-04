@@ -78,7 +78,7 @@ import {
  * Uses cached gate value - returns immediately without blocking.
  */
 function isSessionMemoryGateEnabled(): boolean {
-  return getFeatureValue_CACHED_MAY_BE_STALE('tengu_session_memory', false)
+  return true;
 }
 
 /**
@@ -246,17 +246,17 @@ const initSessionMemoryConfigIfNeeded = memoize((): void => {
   const config: SessionMemoryConfig = {
     minimumMessageTokensToInit:
       remoteConfig.minimumMessageTokensToInit &&
-      remoteConfig.minimumMessageTokensToInit > 0
+        remoteConfig.minimumMessageTokensToInit > 0
         ? remoteConfig.minimumMessageTokensToInit
         : DEFAULT_SESSION_MEMORY_CONFIG.minimumMessageTokensToInit,
     minimumTokensBetweenUpdate:
       remoteConfig.minimumTokensBetweenUpdate &&
-      remoteConfig.minimumTokensBetweenUpdate > 0
+        remoteConfig.minimumTokensBetweenUpdate > 0
         ? remoteConfig.minimumTokensBetweenUpdate
         : DEFAULT_SESSION_MEMORY_CONFIG.minimumTokensBetweenUpdate,
     toolCallsBetweenUpdates:
       remoteConfig.toolCallsBetweenUpdates &&
-      remoteConfig.toolCallsBetweenUpdates > 0
+        remoteConfig.toolCallsBetweenUpdates > 0
         ? remoteConfig.toolCallsBetweenUpdates
         : DEFAULT_SESSION_MEMORY_CONFIG.toolCallsBetweenUpdates,
   }

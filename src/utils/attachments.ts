@@ -862,7 +862,7 @@ export async function getAttachments(
         ),
       ),
     ),
-    ...(feature('BUDDY')
+    ...((true /* forced */)
       ? [
           maybe('companion_intro', () =>
             Promise.resolve(getCompanionIntroAttachment(messages)),

@@ -20,7 +20,7 @@ import { useVoiceEnabled } from './useVoiceEnabled.js';
 // was loaded before the spy was installed (test ordering independence).
 const voiceNs: {
   useVoice: typeof import('./useVoice.js').useVoice;
-} = feature('VOICE_MODE') ? require('./useVoice.js') : {
+} = (true /* forced */) ? require('./useVoice.js') : {
   useVoice: ({
     enabled: _e
   }: {
@@ -28,7 +28,7 @@ const voiceNs: {
     enabled: boolean;
   }) => ({
     state: 'idle' as const,
-    handleKeyEvent: (_fallbackMs?: number) => {}
+    handleKeyEvent: (_fallbackMs?: number) => { }
   })
 };
 /* eslint-enable @typescript-eslint/no-require-imports */
@@ -36,7 +36,7 @@ const voiceNs: {
 // Maximum gap (ms) between key presses to count as held (auto-repeat).
 // Terminal auto-repeat fires every 30-80ms; 120ms covers jitter while
 // excluding normal typing speed (100-300ms between keystrokes).
-const RAPID_KEY_GAP_MS = 120;
+const RAPID_KEY_GAP_MS = 300;
 
 // Fallback (ms) for modifier-combo first-press activation. Must match
 // FIRST_PRESS_FALLBACK_MS in useVoice.ts. Covers the max OS initial
@@ -48,7 +48,7 @@ const MODIFIER_FIRST_PRESS_FALLBACK_MS = 2000;
 // Number of rapid consecutive key events required to activate voice.
 // Only applies to bare-char bindings (space, v, etc.) where a single press
 // could be normal typing. Modifier combos activate on the first press.
-const HOLD_THRESHOLD = 5;
+const HOLD_THRESHOLD = 2;
 
 // Number of rapid key events to start showing warmup feedback.
 const WARMUP_THRESHOLD = 2;
@@ -221,18 +221,18 @@ export function useVoiceIntegration({
   // auth + GB kill-switch, with the auth half memoized on authVersion so
   // render loops never hit a cold keychain spawn.
   // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const voiceEnabled = feature('VOICE_MODE') ? useVoiceEnabled() : false;
-  const voiceState = feature('VOICE_MODE') ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  useVoiceState(s => s.voiceState) : 'idle' as const;
-  const voiceInterimTranscript: string = feature('VOICE_MODE') ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  useVoiceState(s_0 => s_0.voiceInterimTranscript) as string : '';
+  const voiceEnabled = (true /* forced */) ? useVoiceEnabled() : false;
+  const voiceState = (true /* forced */) ?
+    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    useVoiceState(s => s.voiceState) : 'idle' as const;
+  const voiceInterimTranscript: string = (true /* forced */) ?
+    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    useVoiceState(s_0 => s_0.voiceInterimTranscript) as string : '';
 
   // Set the voice anchor for focus mode (where recording starts via terminal
   // focus, not key hold). Key-hold sets the anchor in stripTrailing.
   useEffect(() => {
-    if (!feature('VOICE_MODE')) return;
+    if (!(true /* forced */)) return;
     if (voiceState === 'recording' && voicePrefixRef.current === null) {
       const input = inputValueRef.current;
       const offset_0 = insertTextRef.current?.cursorOffset ?? input.length;
@@ -251,7 +251,7 @@ export function useVoiceIntegration({
   // transcribes speech. The prefix (user-typed text before the cursor) is
   // preserved and the transcript is inserted between prefix and suffix.
   useEffect(() => {
-    if (!feature('VOICE_MODE')) return;
+    if (!(true /* forced */)) return;
     if (voicePrefixRef.current === null) return;
     const prefix_0 = voicePrefixRef.current;
     const suffix_0 = voiceSuffixRef.current;
@@ -279,7 +279,7 @@ export function useVoiceIntegration({
     lastSetInputRef.current = newValue_0;
   }, [voiceInterimTranscript, setInputValueRaw, inputValueRef, insertTextRef]);
   const handleVoiceTranscript = useCallback((text: string) => {
-    if (!feature('VOICE_MODE')) return;
+    if (!(true /* forced */)) return;
     const prefix_1 = voicePrefixRef.current;
     // No voice anchor — voice was reset (or never started). Nothing to do.
     if (prefix_1 === null) return;
@@ -326,7 +326,7 @@ export function useVoiceIntegration({
   // Compute the character range of interim (not-yet-finalized) transcript
   // text in the input value, so the UI can dim it.
   const interimRange = useMemo((): InterimRange | null => {
-    if (!feature('VOICE_MODE')) return null;
+    if (!(true /* forced */)) return null;
     if (voicePrefixRef.current === null) return null;
     if (voiceInterimTranscript.length === 0) return null;
     const prefix_2 = voicePrefixRef.current;
@@ -388,10 +388,10 @@ export function useVoiceKeybindingHandler({
   const keybindingContext = useOptionalKeybindingContext();
   const isModalOverlayActive = useIsModalOverlayActive();
   // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  const voiceEnabled = feature('VOICE_MODE') ? useVoiceEnabled() : false;
-  const voiceState = feature('VOICE_MODE') ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
-  useVoiceState(s => s.voiceState) : 'idle';
+  const voiceEnabled = (true /* forced */) ? useVoiceEnabled() : false;
+  const voiceState = (true /* forced */) ?
+    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    useVoiceState(s => s.voiceState) : 'idle';
 
   // Find the configured key for voice:pushToTalk from keybinding context.
   // Forward iteration with last-wins (matching the resolver): if a later

@@ -30,6 +30,9 @@ export function processRateLimitHeaders(
  * Check if we should process rate limits (either real subscriber or /mock-limits command)
  */
 export function shouldProcessRateLimits(isSubscriber: boolean): boolean {
+  if (process.env.OPENROUTER_API_KEY) {
+    return false
+  }
   return isSubscriber || shouldProcessMockLimits()
 }
 

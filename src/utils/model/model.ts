@@ -103,6 +103,9 @@ export function getBestModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Opus model (3P providers may lag so keep defaults unchanged).
 export function getDefaultOpusModel(): ModelName {
+  if (process.env.OPENROUTER_API_KEY) {
+    return 'anthropic/claude-opus-4.6'
+  }
   if (process.env.ANTHROPIC_DEFAULT_OPUS_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_OPUS_MODEL
   }
@@ -117,6 +120,9 @@ export function getDefaultOpusModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Sonnet model (3P providers may lag so keep defaults unchanged).
 export function getDefaultSonnetModel(): ModelName {
+  if (process.env.OPENROUTER_API_KEY) {
+    return 'anthropic/claude-sonnet-4.6'
+  }
   if (process.env.ANTHROPIC_DEFAULT_SONNET_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
   }
@@ -129,6 +135,9 @@ export function getDefaultSonnetModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Haiku model (3P providers may lag so keep defaults unchanged).
 export function getDefaultHaikuModel(): ModelName {
+  if (process.env.OPENROUTER_API_KEY) {
+    return 'anthropic/claude-haiku-4.5'
+  }
   if (process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
   }
@@ -218,28 +227,28 @@ export function firstPartyNameToCanonical(name: ModelName): ModelShortName {
   name = name.toLowerCase()
   // Special cases for Claude 4+ models to differentiate versions
   // Order matters: check more specific versions first (4-5 before 4)
-  if (name.includes('claude-opus-4-6')) {
+  if (name.includes('claude-opus-4-6') || name.includes('claude-opus-4.6')) {
     return 'claude-opus-4-6'
   }
-  if (name.includes('claude-opus-4-5')) {
+  if (name.includes('claude-opus-4-5') || name.includes('claude-opus-4.5')) {
     return 'claude-opus-4-5'
   }
-  if (name.includes('claude-opus-4-1')) {
+  if (name.includes('claude-opus-4-1') || name.includes('claude-opus-4.1')) {
     return 'claude-opus-4-1'
   }
   if (name.includes('claude-opus-4')) {
     return 'claude-opus-4'
   }
-  if (name.includes('claude-sonnet-4-6')) {
+  if (name.includes('claude-sonnet-4-6') || name.includes('claude-sonnet-4.6')) {
     return 'claude-sonnet-4-6'
   }
-  if (name.includes('claude-sonnet-4-5')) {
+  if (name.includes('claude-sonnet-4-5') || name.includes('claude-sonnet-4.5')) {
     return 'claude-sonnet-4-5'
   }
   if (name.includes('claude-sonnet-4')) {
     return 'claude-sonnet-4'
   }
-  if (name.includes('claude-haiku-4-5')) {
+  if (name.includes('claude-haiku-4-5') || name.includes('claude-haiku-4.5')) {
     return 'claude-haiku-4-5'
   }
   // Claude 3.x models use a different naming scheme (claude-3-{family})
