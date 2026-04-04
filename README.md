@@ -1,4 +1,4 @@
-# 🚀 Claude-OR
+# Claude-OR
 
 A fast, unlocked fork of Claude Code optimized for OpenRouter.
 
@@ -31,11 +31,5 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
 ### 🛠️ Key Features
 - **OpenRouter Native**: Seamless model routing with prompt caching support.
 - **Voice Mode**: Hold **Space** to record. (Requires `sox` on Linux).
-- **Unlocked Features**: 🐧 Buddy, `/summary`, and Session Memory are active.
-- **Cost Saving**: Automatic caching headers included.
-
----
-
-### 📜 Disclaimers
-- Educational purposes only.
-- All rights belong to Anthropic.
+- **Unlocked Features**: `/buddy`, `/summary`, and Session Memory are active.
+- **Cost Saving**: Automatic caching headers included. and no usage limitation from Anthropic.
