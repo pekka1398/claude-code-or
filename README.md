@@ -20,7 +20,10 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
 4. **Build & Run**:
    ```bash
    bun run build
-   ./claude-or
+   # Optional: install to system binary folder
+   sudo mv claude-or /usr/local/bin/claude-or
+   # Run
+   claude-or
    ```
 
 ---
