@@ -29,7 +29,7 @@ export function isFirstPartyAnthropicBaseUrl(): boolean {
   }
   try {
     const host = new URL(baseUrl).host
-    const allowedHosts = ['api.anthropic.com']
+    const allowedHosts = ['api.anthropic.com', 'openrouter.ai']
     if (process.env.USER_TYPE === 'ant') {
       allowedHosts.push('api-staging.anthropic.com')
     }
