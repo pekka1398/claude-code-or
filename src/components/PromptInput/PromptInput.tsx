@@ -320,7 +320,7 @@ function PromptInput({
   // REPL.tsx) — teammate view falls back to SpinnerWithVerbInner which has
   // its own marginTop, so the gap stays even without ours.
   const briefOwnsGap = feature('KAIROS') || feature('KAIROS_BRIEF') ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useAppState(s => s.isBriefOnly) && !viewingAgentTaskId : false;
   const mainLoopModel_ = useAppState(s => s.mainLoopModel);
   const mainLoopModelForSession = useAppState(s => s.mainLoopModelForSession);
@@ -534,7 +534,7 @@ function PromptInput({
   const tokenBudgetTriggers = useMemo(() => feature('TOKEN_BUDGET') ? findTokenBudgetPositions(displayedValue) : [], [displayedValue]);
   const knownChannelsVersion = useSyncExternalStore(subscribeKnownChannels, getKnownChannelsVersion);
   const slackChannelTriggers = useMemo(() => hasSlackMcpServer(store.getState().mcp.clients) ? findSlackChannelPositions(displayedValue) : [],
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a stable ref
+  
   [displayedValue, knownChannelsVersion]);
 
   // Find @name mentions and highlight with team member's color
@@ -1982,7 +1982,7 @@ function PromptInput({
   }, [effortNotificationText, addNotification, removeNotification]);
   useBuddyNotification();
   const companionSpeaking = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useAppState(s => s.companionReaction !== undefined) : false;
   const {
     columns,

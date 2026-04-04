@@ -1,4 +1,4 @@
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 import { type as osType, version as osVersion, release as osRelease } from 'os'
 import { env } from '../utils/env.js'
 import { getIsGit } from '../utils/git.js'
@@ -175,7 +175,7 @@ export function prependBullets(items: Array<string | string[]>): string[] {
 function getSimpleIntroSection(
   outputStyleConfig: OutputStyleConfig | null,
 ): string {
-  // eslint-disable-next-line custom-rules/prompt-spacing
+  
   return `
 You are an interactive agent that helps users ${outputStyleConfig !== null ? 'according to your "Output Style" below, which describes how you should respond to user queries.' : 'with software engineering tasks.'} Use the instructions below and the tools available to you to assist the user.
 

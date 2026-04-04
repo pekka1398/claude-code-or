@@ -1,4 +1,4 @@
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 import { feature } from 'bun:bundle'
 import { readFile, stat } from 'fs/promises'
 import { dirname } from 'path'
@@ -498,7 +498,7 @@ export async function runHeadless(
     process.stderr.write(
       `\nStartup time: ${Math.round(process.uptime() * 1000)}ms\n`,
     )
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(0)
   }
 
@@ -4931,7 +4931,7 @@ async function loadInitialMessages(
               getAgentDefinitionsWithOverrides,
               getActiveAgentsFromList,
             } =
-              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              
               require('../tools/AgentTool/loadAgentsDir.js') as typeof import('../tools/AgentTool/loadAgentsDir.js')
             getAgentDefinitionsWithOverrides.cache.clear?.()
             const freshAgentDefs = await getAgentDefinitionsWithOverrides(
@@ -5133,7 +5133,7 @@ async function loadInitialMessages(
           process.stderr.write(warning + '\n')
           // Refresh agent definitions to reflect the mode switch
           const { getAgentDefinitionsWithOverrides, getActiveAgentsFromList } =
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            
             require('../tools/AgentTool/loadAgentsDir.js') as typeof import('../tools/AgentTool/loadAgentsDir.js')
           getAgentDefinitionsWithOverrides.cache.clear?.()
           const freshAgentDefs = await getAgentDefinitionsWithOverrides(

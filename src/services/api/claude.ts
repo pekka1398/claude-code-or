@@ -552,7 +552,7 @@ export async function verifyApiKey(
           }),
         async anthropic => {
           const messages: MessageParam[] = [{ role: 'user', content: 'test' }]
-          // biome-ignore lint/plugin: API key verification is intentionally a minimal direct call
+          
           await anthropic.beta.messages.create({
             model,
             max_tokens: 1,
@@ -861,7 +861,7 @@ export async function* executeNonStreamingRequest(
       )
 
       try {
-        // biome-ignore lint/plugin: non-streaming API call
+        
         return await anthropic.beta.messages.create(
           {
             ...adjustedParams,
@@ -1510,7 +1510,7 @@ async function* queryModel(
   let stream: Stream<BetaRawMessageStreamEvent> | undefined = undefined
   let streamRequestId: string | null | undefined = undefined
   let clientRequestId: string | undefined = undefined
-  // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins -- Response is available in Node 18+ and is used by the SDK
+  
   let streamResponse: Response | undefined = undefined
 
   // Release all stream resources to prevent native memory leaks.
@@ -1819,7 +1819,7 @@ async function* queryModel(
         // Use raw stream instead of BetaMessageStream to avoid O(n²) partial JSON parsing
         // BetaMessageStream calls partialParse() on every input_json_delta, which we don't need
         // since we handle tool input accumulation ourselves
-        // biome-ignore lint/plugin: main conversation loop handles attribution separately
+        
         const result = await anthropic.beta.messages
           .create(
             { ...params, stream: true },
@@ -2395,7 +2395,7 @@ async function* queryModel(
       // Process fallback percentage header and quota status if available
       // streamResponse is set when the stream is created in the withRetry callback above
       // TypeScript's control flow analysis can't track that streamResponse is set in the callback
-      // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+      
       const resp = streamResponse as unknown as Response | undefined
       if (resp) {
         extractQuotaStatusFromHeaders(resp.headers)

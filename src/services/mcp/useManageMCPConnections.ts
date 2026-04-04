@@ -454,7 +454,7 @@ export function useManageMCPConnections(
                   )
 
                   await new Promise<void>(resolve => {
-                    // eslint-disable-next-line no-restricted-syntax -- timer stored in ref for cancellation; sleep() doesn't expose the handle
+                    
                     const timer = setTimeout(resolve, backoffMs)
                     reconnectTimersRef.current.set(client.name, timer)
                   })

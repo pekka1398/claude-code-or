@@ -210,7 +210,7 @@ export function CompanionSprite(): React.ReactNode {
       companionReaction: undefined
     }), BUBBLE_SHOW * TICK_MS, setAppState);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- tick intentionally captured at reaction-change, not tracked
+    
   }, [reaction, setAppState]);
   if (!(true /* forced */)) return null;
   const companion = getCompanion();

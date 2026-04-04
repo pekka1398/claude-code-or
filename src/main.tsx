@@ -8,15 +8,15 @@
 //    (~65ms on every macOS startup)
 import { profileCheckpoint, profileReport } from './utils/startupProfiler.js';
 
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 profileCheckpoint('main_tsx_entry');
 import { startMdmRawRead } from './utils/settings/mdm/rawRead.js';
 
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 startMdmRawRead();
 import { ensureKeychainPrefetchCompleted, startKeychainPrefetch } from './utils/secureStorage/keychainPrefetch.js';
 
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 startKeychainPrefetch();
 import { feature } from 'bun:bundle';
 import { Command as CommanderCommand, InvalidArgumentError, Option } from '@commander-js/extra-typings';
@@ -205,7 +205,7 @@ import { shouldEnableThinkingByDefault, type ThinkingConfig } from './utils/thin
 import { initUser, resetUserCache } from './utils/user.js';
 import { getTmuxInstallInstructions, isTmuxAvailable, parsePRReference } from './utils/worktree.js';
 
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 profileCheckpoint('main_tsx_imports_loaded');
 
 /**
@@ -252,7 +252,7 @@ function isBeingDebugged() {
   // Check if inspector is available and active (indicates debugging)
   try {
     // Dynamic import would be better but is async - use global object instead
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     const inspector = (global as any).require('inspector');
     const hasInspectorUrl = !!inspector.url();
     return hasInspectorUrl || hasInspectArg || hasInspectEnv;
@@ -266,7 +266,7 @@ function isBeingDebugged() {
 if (("external" as string) !== 'ant' && isBeingDebugged()) {
   // Use process.exit directly here since we're in the top-level code before imports
   // and gracefulShutdown is not yet available
-  // eslint-disable-next-line custom-rules/no-top-level-side-effects
+  
   process.exit(1);
 }
 
@@ -1018,7 +1018,7 @@ async function run(): Promise<CommanderCommand> {
     // Ignore "code" as a prompt - treat it the same as no prompt
     if (prompt === 'code') {
       logEvent('tengu_code_prompt_ignored', {});
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
+      
       console.warn(chalk.yellow('Tip: You can launch Claude Code with just `claude`'));
       prompt = undefined;
     }
@@ -1065,7 +1065,7 @@ async function run(): Promise<CommanderCommand> {
       agentId?: unknown;
     }).agentId && kairosGate) {
       if (!checkHasTrustDialogAccepted()) {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        
         console.warn(chalk.yellow('Assistant mode disabled: directory is not trusted. Accept the trust dialog and restart.'));
       } else {
         // Blocking gate check — returns cached `true` instantly; if disk
@@ -1555,7 +1555,7 @@ async function run(): Promise<CommanderCommand> {
         });
         logForDebugging(`[Claude in Chrome] Error: ${error}`);
         logError(error);
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        
         console.error(`Error: Failed to run with Claude in Chrome.`);
         process.exit(1);
       }
@@ -1772,7 +1772,7 @@ async function run(): Promise<CommanderCommand> {
 
     // Print any warnings from initialization
     warnings.forEach(warning => {
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
+      
       console.error(warning);
     });
     void assertMinVersion();
@@ -1816,12 +1816,12 @@ async function run(): Promise<CommanderCommand> {
     // NOTE: We do NOT call prefetchAllMcpResources here - that's deferred until after trust dialog
 
     if (inputFormat && inputFormat !== 'text' && inputFormat !== 'stream-json') {
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
+      
       console.error(`Error: Invalid input format "${inputFormat}".`);
       process.exit(1);
     }
     if (inputFormat === 'stream-json' && outputFormat !== 'stream-json') {
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
+      
       console.error(`Error: --input-format=stream-json requires output-format=stream-json.`);
       process.exit(1);
     }
@@ -1829,7 +1829,7 @@ async function run(): Promise<CommanderCommand> {
     // Validate sdkUrl is only used with appropriate formats (formats are auto-set above)
     if (sdkUrl) {
       if (inputFormat !== 'stream-json' || outputFormat !== 'stream-json') {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        
         console.error(`Error: --sdk-url requires both --input-format=stream-json and --output-format=stream-json.`);
         process.exit(1);
       }
@@ -1838,7 +1838,7 @@ async function run(): Promise<CommanderCommand> {
     // Validate replayUserMessages is only used with stream-json formats
     if (options.replayUserMessages) {
       if (inputFormat !== 'stream-json' || outputFormat !== 'stream-json') {
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        
         console.error(`Error: --replay-user-messages requires both --input-format=stream-json and --output-format=stream-json.`);
         process.exit(1);
       }
@@ -4082,7 +4082,7 @@ async function run(): Promise<CommanderCommand> {
         setDirectConnectServerUrl(serverUrl);
         connectConfig = session.config;
       } catch (err) {
-        // biome-ignore lint/suspicious/noConsole: intentional error output
+        
         console.error(err instanceof DirectConnectError ? err.message : String(err));
         process.exit(1);
       }
@@ -4612,7 +4612,7 @@ function maybeActivateProactive(options: unknown): void {
   if ((feature('PROACTIVE') || feature('KAIROS')) && ((options as {
     proactive?: boolean;
   }).proactive || isEnvTruthy(process.env.CLAUDE_CODE_PROACTIVE))) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     const proactiveModule = require('./proactive/index.js');
     if (!proactiveModule.isProactiveActive()) {
       proactiveModule.activateProactive('command');

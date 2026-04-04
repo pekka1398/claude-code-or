@@ -1,5 +1,5 @@
 import { c as _c } from "react/compiler-runtime";
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 import { feature } from 'bun:bundle';
 import { spawnSync } from 'child_process';
 import { snapshotOutputTokensForTurn, getCurrentTurnTokenBudget, getTurnOutputTokens, getBudgetContinuationCount, getTotalInputTokens } from '../bootstrap/state.js';
@@ -8,7 +8,7 @@ import { count } from '../utils/array.js';
 import { dirname, join } from 'path';
 import { tmpdir } from 'os';
 import figures from 'figures';
-// eslint-disable-next-line custom-rules/prefer-use-keybindings -- / n N Esc [ v are bare letters in transcript modal context, same class as g/G/j/k in ScrollKeybindingHandler
+
 import { useInput } from '../ink.js';
 import { useSearchInput } from '../hooks/useSearchInput.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
@@ -434,7 +434,7 @@ function TranscriptSearchBar({
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []); // mount-only: bar opens once per /
   // Gate the query effect on warm completion. setHighlight stays instant
   // (screen-space overlay, no indexing). setSearchQuery (the scan) waits.
@@ -443,7 +443,7 @@ function TranscriptSearchBar({
     if (!warmDone) return;
     jumpRef.current?.setSearchQuery(query);
     setHighlight(query);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [query, warmDone]);
   const off = cursorOffset;
   const cursorChar = off < query.length ? query[off] : ' ';
@@ -605,7 +605,7 @@ export function REPL({
   const moreRightEnabled = useMemo(() => ("external" as string) === 'ant' && isEnvTruthy(process.env.CLAUDE_MORERIGHT), []);
   const disableVirtualScroll = useMemo(() => isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_VIRTUAL_SCROLL), []);
   const disableMessageActions = feature('MESSAGE_ACTIONS') ?
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useMemo(() => isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_MESSAGE_ACTIONS), []) : false;
 
   // Log REPL mount/unmount lifecycle
@@ -723,7 +723,7 @@ export function REPL({
     removeNotification
   } = useNotifications();
 
-  // eslint-disable-next-line prefer-const
+  
   let trySuggestBgPRIntercept = SUGGEST_BG_PR_NOOP;
   const mcpClients = useMergedClients(initialMcpClients, mcp.clients);
 
@@ -1009,7 +1009,7 @@ export function REPL({
         }
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
   const [showUndercoverCallout, setShowUndercoverCallout] = useState(false);
   useEffect(() => {
@@ -1028,7 +1028,7 @@ export function REPL({
         }
       })();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
   const [toolJSX, setToolJSXInternal] = useState<{
     jsx: React.ReactNode | null;
@@ -1245,14 +1245,14 @@ export function REPL({
     shiftDivider
   } = useUnseenDivider(messages.length);
   if (feature('AWAY_SUMMARY')) {
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useAwaySummary(messages, setMessages, isLoading);
   }
   const [cursor, setCursor] = useState<MessageActionsState | null>(null);
   const cursorNavRef = useRef<MessageActionsNav | null>(null);
   // Memoized so Messages' React.memo holds.
   const unseenDivider = useMemo(() => computeUnseenDivider(messages, dividerIndex),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- length change covers appends; useUnseenDivider's count-drop guard clears dividerIndex on replace/rewind
+    
     [dividerIndex, messages.length]);
   // Re-pin scroll to bottom and clear the unseen-messages baseline. Called
   // on any user-driven return-to-live action (submit, type-into-empty,
@@ -1282,7 +1282,7 @@ export function REPL({
   const {
     maybeLoadOlder
   } = feature('KAIROS') ?
-      // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+      
       useAssistantHistory({
         config: remoteSessionConfig,
         setMessages,
@@ -1993,7 +1993,7 @@ export function REPL({
       });
     }
     // Only run on mount - initialMessages shouldn't change during component lifetime
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
   const {
     status: apiKeyStatus,
@@ -4024,7 +4024,7 @@ export function REPL({
 
   // Voice input integration (VOICE_MODE builds only)
   const voice = (true /* forced */) ?
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useVoiceIntegration({
       setInputValueRaw,
       inputValueRef,
@@ -4055,7 +4055,7 @@ export function REPL({
     // useScheduledTasks's effect (not here) since wrapping a hook call in a dynamic
     // condition would break rules-of-hooks.
     const assistantMode = store.getState().kairosEnabled;
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useScheduledTasks!({
       isLoading,
       assistantMode,
@@ -4069,8 +4069,8 @@ export function REPL({
 
   if (("external" as string) === 'ant') {
     // Tasks mode: watch for tasks and auto-process them
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    // biome-ignore lint/correctness/useHookAtTopLevel: conditional for dead code elimination in external builds
+    
+    
     useTaskListWatcher({
       taskListId,
       isLoading,
@@ -4078,8 +4078,8 @@ export function REPL({
     });
 
     // Loop mode: auto-tick when enabled (via /job command)
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    // biome-ignore lint/correctness/useHookAtTopLevel: conditional for dead code elimination in external builds
+    
+    
     useProactive?.({
       // Suppress ticks while an initial message is pending — the initial
       // message will be processed asynchronously and a premature tick would
@@ -4116,7 +4116,7 @@ export function REPL({
       void diagnosticTracker.shutdown();
     };
     // TODO: fix this
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   // Listen for suspend/resume events
@@ -4315,7 +4315,7 @@ export function REPL({
           // space + slack). Floor at 80. PassThrough has no .columns so
           // without this Ink defaults to 80. Trailing-space strip: right-
           // aligned timestamps still leave a flexbox spacer run at EOL.
-          // eslint-disable-next-line custom-rules/prefer-use-terminal-size -- one-shot at keypress time, not a reactive render dep
+          
           const w = Math.max(80, (process.stdout.columns ?? 80) - 6);
           const raw = await renderMessagesToPlainText(deferredMessages, tools, w);
           const text = raw.replace(/[ \t]+$/gm, '');

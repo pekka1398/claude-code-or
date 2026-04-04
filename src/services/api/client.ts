@@ -76,14 +76,14 @@ import {
 function createStderrLogger(): ClientOptions['logger'] {
   return {
     error: (msg, ...args) =>
-      // biome-ignore lint/suspicious/noConsole:: intentional console output -- SDK logger must use console
+      
       console.error('[Anthropic SDK ERROR]', msg, ...args),
-    // biome-ignore lint/suspicious/noConsole:: intentional console output -- SDK logger must use console
+    
     warn: (msg, ...args) => console.error('[Anthropic SDK WARN]', msg, ...args),
-    // biome-ignore lint/suspicious/noConsole:: intentional console output -- SDK logger must use console
+    
     info: (msg, ...args) => console.error('[Anthropic SDK INFO]', msg, ...args),
     debug: (msg, ...args) =>
-      // biome-ignore lint/suspicious/noConsole:: intentional console output -- SDK logger must use console
+      
       console.error('[Anthropic SDK DEBUG]', msg, ...args),
   }
 }
@@ -362,14 +362,14 @@ function buildFetch(
   fetchOverride: ClientOptions['fetch'],
   source: string | undefined,
 ): ClientOptions['fetch'] {
-  // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+  
   const inner = fetchOverride ?? globalThis.fetch
   // Only send to the first-party API — Bedrock/Vertex/Foundry don't log it
   // and unknown headers risk rejection by strict proxies (inc-4029 class).
   const injectClientRequestId =
     getAPIProvider() === 'firstParty' && isFirstPartyAnthropicBaseUrl()
   return (input, init) => {
-    // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+    
     const headers = new Headers(init?.headers)
     // Generate a client-side request ID so timeouts (which return no server
     // request ID) can still be correlated with server logs by the API team.
@@ -378,7 +378,7 @@ function buildFetch(
       headers.set(CLIENT_REQUEST_ID_HEADER, randomUUID())
     }
     try {
-      // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+      
       const url = input instanceof Request ? input.url : String(input)
       const id = headers.get(CLIENT_REQUEST_ID_HEADER)
       const urlString = new URL(url).pathname

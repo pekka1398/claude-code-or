@@ -5,7 +5,7 @@ import { useNotifications } from '../context/notifications.js';
 import { useIsModalOverlayActive } from '../context/overlayContext.js';
 import { useGetVoiceState, useSetVoiceState, useVoiceState } from '../context/voice.js';
 import { KeyboardEvent } from '../ink/events/keyboard-event.js';
-// eslint-disable-next-line custom-rules/prefer-use-keybindings -- backward-compat bridge until REPL wires handleKeyDown to <Box onKeyDown>
+
 import { useInput } from '../ink.js';
 import { useOptionalKeybindingContext } from '../keybindings/KeybindingContext.js';
 import { keystrokesEqual } from '../keybindings/resolver.js';
@@ -220,13 +220,13 @@ export function useVoiceIntegration({
   // Voice state selectors. useVoiceEnabled = user intent (settings) +
   // auth + GB kill-switch, with the auth half memoized on authVersion so
   // render loops never hit a cold keychain spawn.
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   const voiceEnabled = (true /* forced */) ? useVoiceEnabled() : false;
   const voiceState = (true /* forced */) ?
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useVoiceState(s => s.voiceState) : 'idle' as const;
   const voiceInterimTranscript: string = (true /* forced */) ?
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useVoiceState(s_0 => s_0.voiceInterimTranscript) as string : '';
 
   // Set the voice anchor for focus mode (where recording starts via terminal
@@ -387,10 +387,10 @@ export function useVoiceKeybindingHandler({
   const setVoiceState = useSetVoiceState();
   const keybindingContext = useOptionalKeybindingContext();
   const isModalOverlayActive = useIsModalOverlayActive();
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   const voiceEnabled = (true /* forced */) ? useVoiceEnabled() : false;
   const voiceState = (true /* forced */) ?
-    // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+    
     useVoiceState(s => s.voiceState) : 'idle';
 
   // Find the configured key for voice:pushToTalk from keybinding context.

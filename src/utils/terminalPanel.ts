@@ -112,7 +112,7 @@ class TerminalPanel {
     // Bind Meta+J (toggles back to Claude Code from inside the terminal)
     // and configure the status bar hint. Chained with ';' to collapse
     // 5 spawnSync calls into 1.
-    // biome-ignore format: one tmux command per line
+    
     spawnSync('tmux', [
       '-L', socket,
       'bind-key', '-n', 'M-j', 'detach-client', ';',

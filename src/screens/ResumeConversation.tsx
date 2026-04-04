@@ -172,7 +172,7 @@ export function ResumeConversation({
     loadLogs(newValue);
   }, [showAllProjects, loadLogs]);
   function onCancel() {
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(1);
   }
   async function onSelect(log_0: LogOption) {

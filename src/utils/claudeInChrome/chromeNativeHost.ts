@@ -1,4 +1,4 @@
-// biome-ignore-all lint/suspicious/noConsole: file uses console intentionally
+
 /**
  * Chrome Native Host - Pure TypeScript Implementation
  *
@@ -66,7 +66,7 @@ export async function runChromeNativeHost(): Promise<void> {
   await host.start()
 
   // Process messages from Chrome until stdin closes
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  
   while (true) {
     const message = await messageReader.read()
     if (message === null) {

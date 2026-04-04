@@ -39,7 +39,7 @@ function execFilePromise(
       args,
       { encoding: 'utf-8', timeout: MDM_SUBPROCESS_TIMEOUT_MS },
       (err, stdout) => {
-        // biome-ignore lint/nursery/noFloatingPromises: resolve() is not a floating promise
+        
         resolve({ stdout: stdout ?? '', code: err ? 1 : 0 })
       },
     )

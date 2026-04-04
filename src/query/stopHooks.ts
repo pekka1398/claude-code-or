@@ -126,7 +126,7 @@ export async function* handleStopHooks(
       })
     await Promise.race([
       p,
-      // eslint-disable-next-line no-restricted-syntax -- sleep() has no .unref(); timer must not block exit
+      
       new Promise<void>(r => setTimeout(r, 60_000).unref()),
     ])
   }

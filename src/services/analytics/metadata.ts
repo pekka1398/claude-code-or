@@ -1,4 +1,4 @@
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 /**
  * Shared event metadata enrichment for analytics systems
  *
@@ -671,7 +671,7 @@ function buildProcessMetrics(): ProcessMetrics | undefined {
       heapUsed: mem.heapUsed,
       external: mem.external,
       arrayBuffers: mem.arrayBuffers,
-      // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+      
       constrainedMemory: process.constrainedMemory(),
       cpuUsage: cpu,
       cpuPercent,

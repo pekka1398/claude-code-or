@@ -1,5 +1,5 @@
 import { c as _c } from "react/compiler-runtime";
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 import { feature } from 'bun:bundle';
 // Dead code elimination: conditional import for COORDINATOR_MODE
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -262,13 +262,13 @@ function ModeIndicator({
   const prStatus = usePrStatus(isLoading, isPrStatusEnabled());
   const hasTmuxSession = useAppState(s_4 => ("external" as string) === 'ant' && s_4.tungstenActiveSession !== undefined);
   const nextTickAt = useSyncExternalStore(proactiveModule?.subscribeToProactiveChanges ?? NO_OP_SUBSCRIBE, proactiveModule?.getNextTickAt ?? NULL, NULL);
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   const voiceEnabled = (true /* forced */) ? useVoiceEnabled() : false;
   const voiceState = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useVoiceState(s_5 => s_5.voiceState) : 'idle' as const;
   const voiceWarmingUp = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useVoiceState(s_6 => s_6.voiceWarmingUp) : false;
   const hasSelection = useHasSelection();
   const selGetState = useSelection().getState;
@@ -281,7 +281,7 @@ function ModeIndicator({
   const todosShortcut = useShortcutDisplay('app:toggleTodos', 'Global', 'ctrl+t');
   const killAgentsShortcut = useShortcutDisplay('chat:killAgents', 'Chat', 'ctrl+x ctrl+k');
   const voiceKeyShortcut = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useShortcutDisplay('voice:pushToTalk', 'Chat', 'Space') : '';
   // Captured at mount so the hint doesn't flicker mid-session if another
   // CC instance increments the counter. Incremented once via useEffect the
@@ -289,9 +289,9 @@ function ModeIndicator({
   // shown" without tracking the exact render-time condition (which depends
   // on parts/hintParts computed after the early-return hooks boundary).
   const [voiceHintUnderCap] = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useState(() => (getGlobalConfig().voiceFooterHintSeenCount ?? 0) < MAX_VOICE_HINT_SHOWS) : [false];
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   const voiceHintIncrementedRef = (true /* forced */) ? useRef(false) : null;
   useEffect(() => {
     if ((true /* forced */)) {

@@ -57,7 +57,7 @@ export function getSessionRecordingPaths(): string[] {
   const projectsDir = join(getClaudeConfigHomeDir(), 'projects')
   const projectDir = join(projectsDir, sanitizePath(getOriginalCwd()))
   try {
-    // eslint-disable-next-line custom-rules/no-sync-fs -- called during /share before upload, not in hot path
+    
     const entries = getFsImplementation().readdirSync(projectDir)
     const names = (
       typeof entries[0] === 'string'
@@ -117,9 +117,9 @@ let recorder: AsciicastRecorder | null = null
 
 function getTerminalSize(): { cols: number; rows: number } {
   // Direct access to stdout dimensions — not in a React component
-  // eslint-disable-next-line custom-rules/prefer-use-terminal-size
+  
   const cols = process.stdout.columns || 80
-  // eslint-disable-next-line custom-rules/prefer-use-terminal-size
+  
   const rows = process.stdout.rows || 24
   return { cols, rows }
 }
@@ -159,12 +159,12 @@ export function installAsciicastRecorder(): void {
   })
 
   try {
-    // eslint-disable-next-line custom-rules/no-sync-fs -- one-time init before Ink mounts
+    
     getFsImplementation().mkdirSync(dirname(filePath))
   } catch {
     // Directory may already exist
   }
-  // eslint-disable-next-line custom-rules/no-sync-fs -- one-time init before Ink mounts
+  
   getFsImplementation().appendFileSync(filePath, header + '\n', { mode: 0o600 })
 
   let pendingWrite: Promise<void> = Promise.resolve()

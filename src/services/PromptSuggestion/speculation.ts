@@ -688,7 +688,7 @@ export async function startSpeculation(
 
     safeRemoveOverlay(overlayPath)
 
-    // eslint-disable-next-line no-restricted-syntax -- custom fallback message, not toError(e)
+    
     logError(error instanceof Error ? error : new Error('Speculation failed'))
 
     logSpeculation(

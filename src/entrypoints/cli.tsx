@@ -20,15 +20,15 @@ if (typeof globalThis.MACRO === "undefined") {
 (globalThis as any).INTERFACE_TYPE = "stdio";
 
 // Bugfix for corepack auto-pinning, which adds yarnpkg to peoples' package.jsons
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 process.env.COREPACK_ENABLE_AUTO_PIN = "0";
 
 // Set max heap size for child processes in CCR environments (containers have 16GB)
-// eslint-disable-next-line custom-rules/no-top-level-side-effects, custom-rules/no-process-env-top-level, custom-rules/safe-env-boolean-check
+
 if (process.env.CLAUDE_CODE_REMOTE === "true") {
-    // eslint-disable-next-line custom-rules/no-top-level-side-effects, custom-rules/no-process-env-top-level
+    
     const existing = process.env.NODE_OPTIONS || "";
-    // eslint-disable-next-line custom-rules/no-top-level-side-effects, custom-rules/no-process-env-top-level
+    
     process.env.NODE_OPTIONS = existing
         ? `${existing} --max-old-space-size=8192`
         : "--max-old-space-size=8192";
@@ -39,7 +39,7 @@ if (process.env.CLAUDE_CODE_REMOTE === "true") {
 // BashTool/AgentTool/PowerShellTool capture DISABLE_BACKGROUND_TASKS into
 // module-level consts at import time — init() runs too late. feature() gate
 // DCEs this entire block from external builds.
-// eslint-disable-next-line custom-rules/no-top-level-side-effects, custom-rules/no-process-env-top-level
+
 if (feature("ABLATION_BASELINE") && process.env.CLAUDE_CODE_ABLATION_BASELINE) {
     for (const k of [
         "CLAUDE_CODE_SIMPLE",
@@ -50,7 +50,7 @@ if (feature("ABLATION_BASELINE") && process.env.CLAUDE_CODE_ABLATION_BASELINE) {
         "CLAUDE_CODE_DISABLE_AUTO_MEMORY",
         "CLAUDE_CODE_DISABLE_BACKGROUND_TASKS",
     ]) {
-        // eslint-disable-next-line custom-rules/no-top-level-side-effects, custom-rules/no-process-env-top-level
+        
         process.env[k] ??= "1";
     }
 }
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
 
             // Log that we are using OpenRouter (only in interactive mode or if debug is enabled)
             if (!args.includes("--print") && !args.includes("-p")) {
-                // biome-ignore lint/suspicious/noConsole:: intentional console output
+                
                 console.log("\x1b[38;5;208m●\x1b[0m OpenRouter bridge active");
             }
         }
@@ -91,7 +91,7 @@ async function main(): Promise<void> {
         (args[0] === "--version" || args[0] === "-v" || args[0] === "-V")
     ) {
         // MACRO.VERSION is inlined at build time
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        
         console.log(`${MACRO.VERSION} (Claude Code)`);
         return;
     }
@@ -113,7 +113,7 @@ async function main(): Promise<void> {
             (modelIdx !== -1 && args[modelIdx + 1]) || getMainLoopModel();
         const { getSystemPrompt } = await import("../constants/prompts.js");
         const prompt = await getSystemPrompt([], model);
-        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        
         console.log(prompt.join("\n"));
         return;
     }
@@ -260,7 +260,7 @@ async function main(): Promise<void> {
         await templatesMain(args);
         // process.exit (not return) — mountFleetView's Ink TUI can leave event
         // loop handles that prevent natural exit.
-        // eslint-disable-next-line custom-rules/no-process-exit
+        
         process.exit(0);
     }
 
@@ -341,5 +341,5 @@ async function main(): Promise<void> {
     profileCheckpoint("cli_after_main_complete");
 }
 
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 void main();

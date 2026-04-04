@@ -172,7 +172,7 @@ export const CLAUDE_CODE_GUIDE_AGENT: BuiltInAgentDefinition = {
     // 5. User settings
     const settings = getSettings_DEPRECATED()
     if (Object.keys(settings).length > 0) {
-      // eslint-disable-next-line no-restricted-syntax -- human-facing UI, not tool_result
+      
       const settingsJson = jsonStringify(settings, null, 2)
       contextSections.push(
         `**User's settings.json:**\n\`\`\`json\n${settingsJson}\n\`\`\``,

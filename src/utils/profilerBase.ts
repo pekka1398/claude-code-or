@@ -13,7 +13,7 @@ let performance: typeof PerformanceType | null = null
 
 export function getPerformance(): typeof PerformanceType {
   if (!performance) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     performance = require('perf_hooks').performance
   }
   return performance!

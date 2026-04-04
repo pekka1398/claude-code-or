@@ -42,16 +42,16 @@ export default function TextInput(props: Props): React.ReactNode {
   const settings = useSettings();
   const reducedMotion = settings.prefersReducedMotion ?? false;
   const voiceState = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useVoiceState(s => s.voiceState) : 'idle' as const;
   const isVoiceRecording = voiceState === 'recording';
   const audioLevels = ((true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useVoiceState(s_0 => s_0.voiceAudioLevels) : []) as number[];
   const smoothedRef = useRef<number[]>(new Array(CURSOR_WAVEFORM_WIDTH).fill(0));
   const needsAnimation = isVoiceRecording && !reducedMotion;
   const [animRef, animTime] = (true /* forced */) ?
-  // biome-ignore lint/correctness/useHookAtTopLevel: feature() is a compile-time constant
+  
   useAnimationFrame(needsAnimation ? 50 : null) : [() => {}, 0];
 
   // Show hint when terminal regains focus and clipboard has an image

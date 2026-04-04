@@ -165,7 +165,7 @@ import { isTodoV2Enabled } from './tasks.js'
 
 // Lazy import to avoid circular dependency (teammateMailbox -> teammate -> ... -> messages)
 function getTeammateMailbox(): typeof import('./teammateMailbox.js') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  
   return require('./teammateMailbox.js')
 }
 
@@ -2371,7 +2371,7 @@ export function normalizeMessagesForAPI(
   // and wastes tokens on every non-meta user message for every ant).
   if (feature('HISTORY_SNIP') && process.env.NODE_ENV !== 'test') {
     const { isSnipRuntimeEnabled } =
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      
       require('../services/compact/snipCompact.js') as typeof import('../services/compact/snipCompact.js')
     if (isSnipRuntimeEnabled()) {
       for (let i = 0; i < sanitized.length; i++) {
@@ -2444,7 +2444,7 @@ export function mergeUserMessages(a: UserMessage, b: UserMessage): UserMessage {
     // tests), so this must only fire when snip is actually enabled — not
     // for all ants.
     const { isSnipRuntimeEnabled } =
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      
       require('../services/compact/snipCompact.js') as typeof import('../services/compact/snipCompact.js')
     if (isSnipRuntimeEnabled()) {
       return {
@@ -3554,8 +3554,8 @@ Read the team config to discover your teammates' names. Check the task list peri
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- teammate_mailbox/team_context/skill_discovery/bagel_console handled above
-  // biome-ignore lint/nursery/useExhaustiveSwitchCases: teammate_mailbox/team_context/max_turns_reached/skill_discovery/bagel_console handled above, can't add case for dead code elimination
+  
+  
   switch (attachment.type) {
     case 'directory': {
       return wrapMessagesInSystemReminder([
@@ -4187,7 +4187,7 @@ You have exited auto mode. The user may now want to interact more directly. You 
     case 'context_efficiency': {
       if (feature('HISTORY_SNIP')) {
         const { SNIP_NUDGE_TEXT } =
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          
           require('../services/compact/snipCompact.js') as typeof import('../services/compact/snipCompact.js')
         return wrapMessagesInSystemReminder([
           createUserMessage({

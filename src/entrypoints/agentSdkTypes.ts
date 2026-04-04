@@ -90,7 +90,7 @@ export function tool<Schema extends AnyZodRawShape>(
 type CreateSdkMcpServerOptions = {
   name: string
   version?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   tools?: Array<SdkMcpToolDefinition<any>>
 }
 

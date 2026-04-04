@@ -378,7 +378,7 @@ export function createClaudeAiProxyFetch(innerFetch: FetchLike): FetchLike {
       if (!currentTokens) {
         throw new Error('No claude.ai OAuth token available')
       }
-      // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+      
       const headers = new Headers(init?.headers)
       headers.set('Authorization', `Bearer ${currentTokens.accessToken}`)
       const response = await innerFetch(url, { ...init, headers })
@@ -504,7 +504,7 @@ export function wrapFetchWithTimeout(baseFetch: FetchLike): FetchLike {
     // accepts HeadersInit | undefined and copies from plain objects, tuple arrays,
     // and existing Headers instances — so whatever shape the SDK handed us, the
     // Accept value survives the spread below as an own property of a concrete object.
-    // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+    
     const headers = new Headers(init?.headers)
     if (!headers.has('accept')) {
       headers.set('accept', MCP_STREAMABLE_HTTP_ACCEPT)
@@ -656,7 +656,7 @@ export const connectToServer = memoize(
             }
 
             const proxyOptions = getProxyFetchOptions()
-            // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+            
             return fetch(url, {
               ...init,
               ...proxyOptions,
@@ -686,7 +686,7 @@ export const connectToServer = memoize(
             ? {
                 eventSourceInit: {
                   fetch: async (url: string | URL, init?: RequestInit) => {
-                    // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+                    
                     return fetch(url, {
                       ...init,
                       ...proxyOptions,
@@ -718,7 +718,7 @@ export const connectToServer = memoize(
         let wsClient: WsClientLike
         if (typeof Bun !== 'undefined') {
           // Bun's WebSocket supports headers/proxy/tls options but the DOM typings don't
-          // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+          
           wsClient = new globalThis.WebSocket(serverRef.url, {
             protocols: ['mcp'],
             headers: wsHeaders,
@@ -767,7 +767,7 @@ export const connectToServer = memoize(
         let wsClient: WsClientLike
         if (typeof Bun !== 'undefined') {
           // Bun's WebSocket supports headers/proxy/tls options but the DOM typings don't
-          // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+          
           wsClient = new globalThis.WebSocket(serverRef.url, {
             protocols: ['mcp'],
             headers: wsHeaders,
@@ -882,7 +882,7 @@ export const connectToServer = memoize(
 
         logMCPDebug(name, `Using claude.ai proxy at ${proxyUrl}`)
 
-        // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins
+        
         const fetchWithAuth = createClaudeAiProxyFetch(globalThis.fetch)
 
         const proxyOptions = getProxyFetchOptions()

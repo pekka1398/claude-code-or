@@ -580,7 +580,7 @@ export function initExtractMemories(): void {
     if (inFlightExtractions.size === 0) return
     await Promise.race([
       Promise.all(inFlightExtractions).catch(() => {}),
-      // eslint-disable-next-line no-restricted-syntax -- sleep() has no .unref(); timer must not block exit
+      
       new Promise<void>(r => setTimeout(r, timeoutMs).unref()),
     ])
   }

@@ -1,4 +1,4 @@
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 import type {
   ToolResultBlockParam,
   ToolUseBlock,
@@ -303,7 +303,7 @@ async function* queryLoop(
     state.toolUseContext,
   )
 
-  // eslint-disable-next-line no-constant-condition
+  
   while (true) {
     // Destructure state at the top of each iteration. toolUseContext alone
     // is reassigned within an iteration (queryTracking, messages updates);
@@ -1565,7 +1565,7 @@ async function* queryLoop(
     // addressed to it — main thread drains agentId===undefined, subagents
     // drain their own agentId. User prompts (mode:'prompt') still go to main
     // only; subagents never see the prompt stream.
-    // eslint-disable-next-line custom-rules/require-tool-match-name -- ToolUseBlock.name has no aliases
+    
     const sleepRan = toolUseBlocks.some(b => b.name === SLEEP_TOOL_NAME)
     const isMainThread =
       querySource.startsWith('repl_main_thread') || querySource === 'sdk'

@@ -35,7 +35,7 @@ export default function ErrorOverview({
   let lineWidth = 0;
   if (filePath && origin?.line) {
     try {
-      // eslint-disable-next-line custom-rules/no-sync-fs -- sync render path; error overlay can't go async without suspense restructuring
+      
       const sourceCode = readFileSync(filePath, 'utf8');
       excerpt = codeExcerpt(sourceCode, origin.line);
       if (excerpt) {

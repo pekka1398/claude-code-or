@@ -900,7 +900,7 @@ function reportConfigCacheStats(): void {
 }
 
 // Register cleanup to report cache stats at session end
-// eslint-disable-next-line custom-rules/no-top-level-side-effects
+
 registerCleanup(async () => {
   reportConfigCacheStats()
 })

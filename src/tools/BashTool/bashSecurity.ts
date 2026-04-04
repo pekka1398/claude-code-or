@@ -920,7 +920,7 @@ function validateNewlines(context: ValidationContext): PermissionResult {
   // follows whitespace (e.g., `cmd \<newline>--flag`). Mid-word continuations
   // like `tr\<newline>aceroute` are still flagged because they can hide
   // dangerous command names from allowlist checks.
-  // eslint-disable-next-line custom-rules/no-lookbehind-regex -- .test() + gated by /[\n\r]/.test() above
+  
   const looksLikeCommand = /(?<![\s]\\)[\n\r]\s*\S/.test(fullyUnquotedPreStrip)
   if (looksLikeCommand) {
     logEvent('tengu_bash_security_check_triggered', {
@@ -1895,7 +1895,7 @@ function validateBraceExpansion(context: ValidationContext): PermissionResult {
 // separators but bash treats as literal word content. While this differential
 // is defense-favorable (shell-quote over-splits), blocking these proactively
 // prevents future edge cases.
-// eslint-disable-next-line no-misleading-character-class
+
 const UNICODE_WS_RE =
   /[\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/
 
@@ -1944,9 +1944,9 @@ function validateMidWordHash(context: ValidationContext): PermissionResult {
     return backslashCount % 2 === 1 ? '\\'.repeat(backslashCount - 1) : match
   })
   if (
-    // eslint-disable-next-line custom-rules/no-lookbehind-regex -- .test() with atom search: fast when # absent
+    
     /\S(?<!\$\{)#/.test(unquotedKeepQuoteChars) ||
-    // eslint-disable-next-line custom-rules/no-lookbehind-regex -- same as above
+    
     /\S(?<!\$\{)#/.test(joined)
   ) {
     logEvent('tengu_bash_security_check_triggered', {
@@ -2247,7 +2247,7 @@ function validateZshDangerousCommands(
 // validators. Bash silently drops null bytes and ignores most control chars,
 // so an attacker can use them to slip metacharacters past our checks while
 // bash still executes them (e.g., "echo safe\x00; rm -rf /").
-// eslint-disable-next-line no-control-regex
+
 const CONTROL_CHAR_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/
 
 /**

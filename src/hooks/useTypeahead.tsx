@@ -9,7 +9,7 @@ import { getModeFromInput, getValueFromInput } from '../components/PromptInput/i
 import type { SuggestionItem, SuggestionType } from '../components/PromptInput/PromptInputFooterSuggestions.js';
 import { useIsModalOverlayActive, useRegisterOverlay } from '../context/overlayContext.js';
 import { KeyboardEvent } from '../ink/events/keyboard-event.js';
-// eslint-disable-next-line custom-rules/prefer-use-keybindings -- backward-compat bridge until consumers wire handleKeyDown to <Box onKeyDown>
+
 import { useInput } from '../ink.js';
 import { useOptionalKeybindingContext, useRegisterKeybindingContext } from '../keybindings/KeybindingContext.js';
 import { useKeybindings } from '../keybindings/useKeybinding.js';
@@ -521,7 +521,7 @@ export function useTypeahead({
     setSuggestionType(channels.length > 0 ? 'slack-channel' : 'none');
     setMaxColumnWidth(undefined);
   },
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a stable context ref
+  
   [setSuggestionsState]);
 
   // First keystroke after # needs the MCP round-trip; subsequent keystrokes
@@ -529,7 +529,7 @@ export function useTypeahead({
   const debouncedFetchSlackChannels = useDebounceCallback(fetchSlackChannels, 150);
 
   // Handle immediate suggestion logic (cheap operations)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: store is a stable context ref, read imperatively at call-time
+  
   const updateSuggestions = useCallback(async (value: string, inputCursorOffset?: number): Promise<void> => {
     // Use provided cursor offset or fall back to ref (avoids dependency on cursorOffset)
     const effectiveCursorOffset = inputCursorOffset ?? cursorOffsetRef.current;

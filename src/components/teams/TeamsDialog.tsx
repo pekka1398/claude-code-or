@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useInterval } from 'usehooks-ts';
 import { useRegisterOverlay } from '../../context/overlayContext.js';
 import { stringWidth } from '../../ink/stringWidth.js';
-// eslint-disable-next-line custom-rules/prefer-use-keybindings -- raw j/k/arrow dialog navigation
+
 import { Box, Text, useInput } from '../../ink.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
 import { useShortcutDisplay } from '../../keybindings/useShortcutDisplay.js';
@@ -69,8 +69,8 @@ export function TeamsDialog({
 
   const teammateStatuses = useMemo(() => {
     return getTeammateStatuses(dialogLevel.teamName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
+    
+    
   }, [dialogLevel.teamName, refreshKey]);
 
   // Periodically refresh to pick up mode changes from teammates

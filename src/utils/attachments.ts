@@ -1,4 +1,4 @@
-// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered
+
 import {
   logEvent,
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
@@ -3970,7 +3970,7 @@ export function getContextEfficiencyAttachment(
   // Gate must match SnipTool.isEnabled() — don't nudge toward a tool that
   // isn't in the tool list. Lazy require keeps this file snip-string-free.
   const { isSnipRuntimeEnabled, shouldNudgeForSnips } =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    
     require('../services/compact/snipCompact.js') as typeof import('../services/compact/snipCompact.js')
   if (!isSnipRuntimeEnabled()) {
     return []

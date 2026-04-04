@@ -61,7 +61,7 @@ function handlePluginCommandError(
     : command === 'disable-all'
       ? 'disable all plugins'
       : `${command} plugins`
-  // biome-ignore lint/suspicious/noConsole:: intentional console output
+  
   console.error(
     `${figures.cross} Failed to ${operation}: ${errorMessage(error)}`,
   )
@@ -91,7 +91,7 @@ function handlePluginCommandError(
     ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
     ...telemetryFields,
   })
-  // eslint-disable-next-line custom-rules/no-process-exit
+  
   process.exit(1)
 }
 
@@ -105,7 +105,7 @@ export async function installPlugin(
   scope: InstallableScope = 'user',
 ): Promise<void> {
   try {
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    
     console.log(`Installing plugin "${plugin}"...`)
 
     const result = await installPluginOp(plugin, scope)
@@ -114,7 +114,7 @@ export async function installPlugin(
       throw new Error(result.message)
     }
 
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    
     console.log(`${figures.tick} ${result.message}`)
 
     // _PROTO_* routes to PII-tagged plugin_name/marketplace_name BQ columns.
@@ -138,7 +138,7 @@ export async function installPlugin(
       ...buildPluginTelemetryFields(name, marketplace, getManagedPluginNames()),
     })
 
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(0)
   } catch (error) {
     handlePluginCommandError(error, 'install', plugin)
@@ -162,7 +162,7 @@ export async function uninstallPlugin(
       throw new Error(result.message)
     }
 
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    
     console.log(`${figures.tick} ${result.message}`)
 
     const { name, marketplace } = parsePluginIdentifier(
@@ -180,7 +180,7 @@ export async function uninstallPlugin(
       ...buildPluginTelemetryFields(name, marketplace, getManagedPluginNames()),
     })
 
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(0)
   } catch (error) {
     handlePluginCommandError(error, 'uninstall', plugin)
@@ -203,7 +203,7 @@ export async function enablePlugin(
       throw new Error(result.message)
     }
 
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    
     console.log(`${figures.tick} ${result.message}`)
 
     const { name, marketplace } = parsePluginIdentifier(
@@ -221,7 +221,7 @@ export async function enablePlugin(
       ...buildPluginTelemetryFields(name, marketplace, getManagedPluginNames()),
     })
 
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(0)
   } catch (error) {
     handlePluginCommandError(error, 'enable', plugin)
@@ -244,7 +244,7 @@ export async function disablePlugin(
       throw new Error(result.message)
     }
 
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    
     console.log(`${figures.tick} ${result.message}`)
 
     const { name, marketplace } = parsePluginIdentifier(
@@ -262,7 +262,7 @@ export async function disablePlugin(
       ...buildPluginTelemetryFields(name, marketplace, getManagedPluginNames()),
     })
 
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(0)
   } catch (error) {
     handlePluginCommandError(error, 'disable', plugin)
@@ -280,12 +280,12 @@ export async function disableAllPlugins(): Promise<void> {
       throw new Error(result.message)
     }
 
-    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    
     console.log(`${figures.tick} ${result.message}`)
 
     logEvent('tengu_plugin_disabled_all_cli', {})
 
-    // eslint-disable-next-line custom-rules/no-process-exit
+    
     process.exit(0)
   } catch (error) {
     handlePluginCommandError(error, 'disable-all')

@@ -184,7 +184,7 @@ export class HybridTransport extends WebSocketTransport {
     void Promise.race([
       uploader.flush(),
       new Promise<void>(r => {
-        // eslint-disable-next-line no-restricted-syntax -- need timer ref for clearTimeout
+        
         graceTimer = setTimeout(r, CLOSE_GRACE_MS)
       }),
     ]).finally(() => {

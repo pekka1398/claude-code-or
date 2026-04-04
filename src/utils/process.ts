@@ -36,9 +36,9 @@ export function writeToStderr(data: string): void {
 // Write error to stderr and exit with code 1. Consolidates the
 // console.error + process.exit(1) pattern used in entrypoint fast-paths.
 export function exitWithError(message: string): never {
-  // biome-ignore lint/suspicious/noConsole:: intentional console output
+  
   console.error(message)
-  // eslint-disable-next-line custom-rules/no-process-exit
+  
   process.exit(1)
 }
 
@@ -60,7 +60,7 @@ export function peekForStdinData(
     }
     const onEnd = () => done(false)
     const onFirstData = () => clearTimeout(peek)
-    // eslint-disable-next-line no-restricted-syntax -- not a sleep: races timeout against stream end/data events
+    
     const peek = setTimeout(done, ms, true)
     stream.once('end', onEnd)
     stream.once('data', onFirstData)
