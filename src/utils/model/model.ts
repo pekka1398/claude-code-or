@@ -273,6 +273,10 @@ export function firstPartyNameToCanonical(name: ModelName): ModelShortName {
   if (name.includes('claude-3-haiku')) {
     return 'claude-3-haiku'
   }
+  // Gemini 3 Flash / Thinking support
+  if (name.includes('gemini-3')) {
+    return 'gemini-3'
+  }
   const match = name.match(/(claude-(\d+-\d+-)?\w+)/)
   if (match && match[1]) {
     return match[1]

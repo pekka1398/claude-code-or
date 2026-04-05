@@ -109,7 +109,9 @@ export function modelSupportsThinking(model: string): boolean {
   return (
     canonical.includes('sonnet-4') ||
     canonical.includes('opus-4') ||
-    canonical.includes('gemini-3')
+    canonical.includes('gemini-3') ||
+    canonical.includes('gemini-2.0-flash-thinking') ||
+    model.toLowerCase().includes('gemini') // Catch-all for OpenRouter passthrough
   )
 }
 

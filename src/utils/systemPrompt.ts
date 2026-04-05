@@ -66,7 +66,7 @@ export function buildEffectiveSystemPrompt({
   ) {
     // Lazy require to avoid circular dependency at module load time
     const { getCoordinatorSystemPrompt } =
-      
+
       require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js')
     return asSystemPrompt([
       getCoordinatorSystemPrompt(),
@@ -77,8 +77,8 @@ export function buildEffectiveSystemPrompt({
   const agentSystemPrompt = mainThreadAgentDefinition
     ? isBuiltInAgent(mainThreadAgentDefinition)
       ? mainThreadAgentDefinition.getSystemPrompt({
-          toolUseContext: { options: toolUseContext.options },
-        })
+        toolUseContext: { options: toolUseContext.options },
+      })
       : mainThreadAgentDefinition.getSystemPrompt()
     : undefined
 
@@ -112,12 +112,30 @@ export function buildEffectiveSystemPrompt({
     ])
   }
 
-  return asSystemPrompt([
+  const initialPrompts = [
     ...(agentSystemPrompt
       ? [agentSystemPrompt]
       : customSystemPrompt
         ? [customSystemPrompt]
         : defaultSystemPrompt),
     ...(appendSystemPrompt ? [appendSystemPrompt] : []),
-  ])
+  ]
+
+  // GEMINI STABILITY PATCH:
+  // If we are using a Google/Gemini model via OpenRouter, inject additional
+  // instructions to ensure strict tool-calling format and identity consistency.
+  const model = toolUseContext.options.mainLoopModel?.toLowerCase() ?? ''
+  if (model.includes('google/') || model.includes('gemini')) {
+    const geminiPatch = [
+      '\n# Gemini Compatibility Mode',
+      'You are running as Claude Code, but using a Gemini model backend.',
+      '1. IDENTITY: You MUST maintain your persona as Claude, the AI assistant from Anthropic.',
+      '2. TOOL PRECISION: When using FileEditTool or any tool that requires matching code (targetContent), you must be extremely precise with whitespace, indentation, and newlines. Do not beautify or modify the code in any way other than the requested change.',
+      '3. THINKING: Provide your technical reasoning in the thinking block provided by the system. Keep it concise and focused on the task.',
+      '4. FORMAT: Always output JSON tool calls in the exact schema provided, without any surrounding markdown code blocks if the API expects raw JSON.',
+    ].join('\n')
+    initialPrompts.push(geminiPatch)
+  }
+
+  return asSystemPrompt(initialPrompts)
 }
