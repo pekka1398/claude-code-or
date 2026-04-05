@@ -76,14 +76,14 @@ import {
 function createStderrLogger(): ClientOptions['logger'] {
   return {
     error: (msg, ...args) =>
-      
+
       console.error('[Anthropic SDK ERROR]', msg, ...args),
-    
+
     warn: (msg, ...args) => console.error('[Anthropic SDK WARN]', msg, ...args),
-    
+
     info: (msg, ...args) => console.error('[Anthropic SDK INFO]', msg, ...args),
     debug: (msg, ...args) =>
-      
+
       console.error('[Anthropic SDK DEBUG]', msg, ...args),
   }
 }
@@ -362,14 +362,14 @@ function buildFetch(
   fetchOverride: ClientOptions['fetch'],
   source: string | undefined,
 ): ClientOptions['fetch'] {
-  
+
   const inner = fetchOverride ?? globalThis.fetch
   // Only send to the first-party API — Bedrock/Vertex/Foundry don't log it
   // and unknown headers risk rejection by strict proxies (inc-4029 class).
   const injectClientRequestId =
     getAPIProvider() === 'firstParty' && isFirstPartyAnthropicBaseUrl()
   return (input, init) => {
-    
+
     const headers = new Headers(init?.headers)
     // Generate a client-side request ID so timeouts (which return no server
     // request ID) can still be correlated with server logs by the API team.
@@ -378,7 +378,7 @@ function buildFetch(
       headers.set(CLIENT_REQUEST_ID_HEADER, randomUUID())
     }
     try {
-      
+
       const url = input instanceof Request ? input.url : String(input)
       const id = headers.get(CLIENT_REQUEST_ID_HEADER)
       const urlString = new URL(url).pathname
@@ -386,26 +386,32 @@ function buildFetch(
         `[API REQUEST] ${urlString}${id ? ` ${CLIENT_REQUEST_ID_HEADER}=${id}` : ''} source=${source ?? 'unknown'}`,
       )
 
-      // OpenRouter payload logging
+      const result = inner(input, { ...init, headers })
+
       if (process.env.OPENROUTER_API_KEY && !isEnvTruthy(process.env.DISABLE_OPENROUTER_LOG)) {
         const logDir = getClaudeConfigHomeDir()
         const logFile = join(logDir, 'openrouter_api.log')
-        const timestamp = new Date().toISOString()
-        const redactedHeaders: Record<string, string> = {}
-        headers.forEach((v, k) => {
-          redactedHeaders[k] = (k.toLowerCase() === 'authorization' || k.toLowerCase() === 'x-api-key') ? '[REDACTED]' : v
+        const id = headers.get(CLIENT_REQUEST_ID_HEADER)
+
+        result.then(async response => {
+          const timestamp = new Date().toISOString()
+          const clone = response.clone()
+          const text = await clone.text().catch(() => 'Failed to read body')
+          const logEntry = `\n--- [${timestamp}] [${id || 'no-id'}] RESPONSE ---\n` +
+            `Status: ${response.status}\n` +
+            `Body: ${text.slice(0, 10000)}${text.length > 10000 ? '... [truncated]' : ''}\n`
+
+          void appendFile(logFile, logEntry).catch(() => { })
+        }).catch(err => {
+          const timestamp = new Date().toISOString()
+          void appendFile(logFile, `\n--- [${timestamp}] [${id || 'no-id'}] FETCH ERROR ---\n${err}\n`).catch(() => { })
         })
-
-        const logEntry = `\n--- [${timestamp}] [${id || 'no-id'}] ---\n` +
-          `URL: ${url}\n` +
-          `Headers: ${JSON.stringify(redactedHeaders, null, 2)}\n` +
-          `Body: ${init?.body || 'no body'}\n`
-
-        void appendFile(logFile, logEntry).catch(() => { })
       }
+
+      return result
     } catch {
       // never let logging crash the fetch
+      return inner(input, { ...init, headers })
     }
-    return inner(input, { ...init, headers })
   }
 }
