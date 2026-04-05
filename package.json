@@ -10,7 +10,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "bun build src/entrypoints/cli.tsx --outdir dist --target bun",
+        "build": "bun build src/entrypoints/cli.tsx --compile --outfile dist/claude-or",
         "dev": "bun run src/entrypoints/cli.tsx",
         "prepublishOnly": "bun run build",
         "lint": "biome lint src/",
