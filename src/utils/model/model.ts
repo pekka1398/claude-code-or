@@ -104,7 +104,7 @@ export function getBestModel(): ModelName {
 // @[MODEL LAUNCH]: Update the default Opus model (3P providers may lag so keep defaults unchanged).
 export function getDefaultOpusModel(): ModelName {
   if (process.env.OPENROUTER_API_KEY) {
-    return 'anthropic/claude-opus-4.6'
+    return 'google/gemini-3-flash-preview'
   }
   if (process.env.ANTHROPIC_DEFAULT_OPUS_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_OPUS_MODEL
@@ -121,7 +121,7 @@ export function getDefaultOpusModel(): ModelName {
 // @[MODEL LAUNCH]: Update the default Sonnet model (3P providers may lag so keep defaults unchanged).
 export function getDefaultSonnetModel(): ModelName {
   if (process.env.OPENROUTER_API_KEY) {
-    return 'anthropic/claude-sonnet-4.6'
+    return 'google/gemini-3-flash-preview'
   }
   if (process.env.ANTHROPIC_DEFAULT_SONNET_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
@@ -136,7 +136,7 @@ export function getDefaultSonnetModel(): ModelName {
 // @[MODEL LAUNCH]: Update the default Haiku model (3P providers may lag so keep defaults unchanged).
 export function getDefaultHaikuModel(): ModelName {
   if (process.env.OPENROUTER_API_KEY) {
-    return 'anthropic/claude-haiku-4.5'
+    return 'google/gemini-3-flash-preview'
   }
   if (process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
@@ -301,6 +301,9 @@ export function getClaudeAiUserDefaultModelDescription(
     }
     return `Opus 4.6 · Most capable for complex work${fastMode ? getOpus46PricingSuffix(true) : ''}`
   }
+  if (process.env.OPENROUTER_API_KEY) {
+    return 'Gemini 3 Flash · OpenRouter default'
+  }
   return 'Sonnet 4.6 · Best for everyday tasks'
 }
 
@@ -387,6 +390,8 @@ export function getPublicModelDisplayName(model: ModelName): string | null {
       return 'Haiku 4.5'
     case getModelStrings().haiku35:
       return 'Haiku 3.5'
+    case 'google/gemini-3-flash-preview':
+      return 'Gemini 3 Flash'
     default:
       return null
   }
