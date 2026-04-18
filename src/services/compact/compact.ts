@@ -251,8 +251,8 @@ export function truncateHeadForPTLRetry(
   // (drops only the marker, re-adds it, zero progress on retry 2+).
   const input =
     messages[0]?.type === 'user' &&
-    messages[0].isMeta &&
-    messages[0].message.content === PTL_RETRY_MARKER
+      messages[0].isMeta &&
+      messages[0].message.content === PTL_RETRY_MARKER
       ? messages.slice(1)
       : messages
 
@@ -449,7 +449,7 @@ export async function compactConversation(
     let summaryResponse: AssistantMessage
     let summary: string | null
     let ptlAttempts = 0
-    for (;;) {
+    for (; ;) {
       summaryResponse = await streamCompactSummary({
         messages: messagesToSummarize,
         summaryRequest,
@@ -504,7 +504,7 @@ export async function compactConversation(
         promptCacheSharingEnabled,
       })
       throw new Error(
-        `Failed to generate conversation summary - response did not contain valid text content`,
+        `Failed to generate conversation summary - response did not contain valid text content. Raw detail: ${JSON.stringify(summaryResponse)}`,
       )
     } else if (startsWithApiErrorPrefix(summary)) {
       logEvent('tengu_compact_failed', {
@@ -676,9 +676,9 @@ export async function compactConversation(
         compactionUsage?.cache_creation_input_tokens ?? 0,
       compactionTotalTokens: compactionUsage
         ? compactionUsage.input_tokens +
-          (compactionUsage.cache_creation_input_tokens ?? 0) +
-          (compactionUsage.cache_read_input_tokens ?? 0) +
-          compactionUsage.output_tokens
+        (compactionUsage.cache_creation_input_tokens ?? 0) +
+        (compactionUsage.cache_read_input_tokens ?? 0) +
+        compactionUsage.output_tokens
         : 0,
       promptCacheSharingEnabled,
       // analyzeContext walks every content block (~11ms on a 4.5K-message
@@ -792,13 +792,13 @@ export async function partialCompactConversation(
     const messagesToKeep =
       direction === 'up_to'
         ? allMessages
-            .slice(pivotIndex)
-            .filter(
-              m =>
-                m.type !== 'progress' &&
-                !isCompactBoundaryMessage(m) &&
-                !(m.type === 'user' && m.isCompactSummary),
-            )
+          .slice(pivotIndex)
+          .filter(
+            m =>
+              m.type !== 'progress' &&
+              !isCompactBoundaryMessage(m) &&
+              !(m.type === 'user' && m.isCompactSummary),
+          )
         : allMessages.slice(0, pivotIndex).filter(m => m.type !== 'progress')
 
     if (messagesToSummarize.length === 0) {
@@ -861,7 +861,7 @@ export async function partialCompactConversation(
     let summaryResponse: AssistantMessage
     let summary: string | null
     let ptlAttempts = 0
-    for (;;) {
+    for (; ;) {
       summaryResponse = await streamCompactSummary({
         messages: apiMessages,
         summaryRequest,
@@ -1011,7 +1011,7 @@ export async function partialCompactConversation(
     const lastPreCompactUuid =
       direction === 'up_to'
         ? allMessages.slice(0, pivotIndex).findLast(m => m.type !== 'progress')
-            ?.uuid
+          ?.uuid
         : messagesToKeep.at(-1)?.uuid
     const boundaryMarker = createCompactBoundaryMessage(
       'manual',
@@ -1036,12 +1036,12 @@ export async function partialCompactConversation(
         isCompactSummary: true,
         ...(messagesToKeep.length > 0
           ? {
-              summarizeMetadata: {
-                messagesSummarized: messagesToSummarize.length,
-                userContext: userFeedback,
-                direction,
-              },
-            }
+            summarizeMetadata: {
+              messagesSummarized: messagesToSummarize.length,
+              userContext: userFeedback,
+              direction,
+            },
+          }
           : { isVisibleInTranscriptOnly: true as const }),
       }),
     ]
@@ -1168,13 +1168,13 @@ async function streamCompactSummary({
   // and the server doesn't consider the session stale.
   const activityInterval = isSessionActivityTrackingActive()
     ? setInterval(
-        (statusSetter?: (status: 'compacting' | null) => void) => {
-          sendSessionActivitySignal()
-          statusSetter?.('compacting')
-        },
-        30_000,
-        context.setSDKStatus,
-      )
+      (statusSetter?: (status: 'compacting' | null) => void) => {
+        sendSessionActivitySignal()
+        statusSetter?.('compacting')
+      },
+      30_000,
+      context.setSDKStatus,
+    )
     : undefined
 
   try {
@@ -1222,9 +1222,9 @@ async function streamCompactSummary({
               cacheHitRate:
                 result.totalUsage.cache_read_input_tokens > 0
                   ? result.totalUsage.cache_read_input_tokens /
-                    (result.totalUsage.cache_read_input_tokens +
-                      result.totalUsage.cache_creation_input_tokens +
-                      result.totalUsage.input_tokens)
+                  (result.totalUsage.cache_read_input_tokens +
+                    result.totalUsage.cache_creation_input_tokens +
+                    result.totalUsage.input_tokens)
                   : 0,
             })
           }
@@ -1282,13 +1282,13 @@ async function streamCompactSummary({
       // Deduplicate by name to avoid API errors when MCP tools share names with built-in tools.
       const tools: Tool[] = useToolSearch
         ? uniqBy(
-            [
-              FileReadTool,
-              ToolSearchTool,
-              ...context.options.tools.filter(t => t.isMcp),
-            ],
-            'name',
-          )
+          [
+            FileReadTool,
+            ToolSearchTool,
+            ...context.options.tools.filter(t => t.isMcp),
+          ],
+          'name',
+        )
         : [FileReadTool]
 
       const streamingGen = queryModelWithStreaming({

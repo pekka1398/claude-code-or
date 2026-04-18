@@ -2876,24 +2876,30 @@ export function getAssistantMessageText(message: Message): string | null {
 
   // For content blocks array, extract and concatenate text blocks
   if (Array.isArray(message.message.content)) {
-    const textBlocks = message.message.content
-      .filter(block => typeof block !== 'string' && block.type === 'text')
+    const text = message.message.content
+      .filter(block => block.type === 'text')
       .map(block => (block.type === 'text' ? block.text : ''))
+      .join('\n')
+      .trim()
 
-    if (textBlocks.length > 0 && textBlocks.some(t => t.trim().length > 0)) {
-      return textBlocks.join('\n').trim() || null
-    }
+    if (text) return text
 
-    // Fallback: if no text blocks, try extraction from thinking blocks
-    // This is common with Gemini 3 Flash when summarization is entirely performed
-    // within the thinking block on OpenRouter.
-    const thinkingBlocks = message.message.content
-      .filter(block => typeof block !== 'string' && block.type === 'thinking')
-      .map(block => (block as ThinkingBlock).thinking)
-
-    if (thinkingBlocks.length > 0 && thinkingBlocks.some(t => t.trim().length > 0)) {
-      return thinkingBlocks.join('\n').trim() || null
-    }
+    // Fallback: search for thinking or redacted_thinking blocks if no text is present
+    return (
+      message.message.content
+        .map(block => {
+          if (block.type === 'text') return block.text
+          if (block.type === 'thinking') return block.thinking
+          if (block.type === 'redacted_thinking') {
+            // OpenRouter style: extract the reasoning data if available
+            const data = (block as any).data || ''
+            return data.replace(/^openrouter\.reasoning:/, '')
+          }
+          return ''
+        })
+        .join('\n')
+        .trim() || null
+    )
   }
   return null
 }

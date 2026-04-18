@@ -130,6 +130,8 @@ import {
   setPromptCache1hAllowlist,
   setPromptCache1hEligible,
   setThinkingClearLatched,
+  addOpenRouterActualCost,
+  setLastRequestUsage,
 } from 'src/bootstrap/state.js'
 import {
   AFK_MODE_BETA_HEADER,
@@ -180,6 +182,7 @@ import { isMcpInstructionsDeltaEnabled } from 'src/utils/mcpInstructionsDelta.js
 import { calculateUSDCost } from 'src/utils/modelCost.js'
 import { endQueryProfile, queryCheckpoint } from 'src/utils/queryProfiler.js'
 import {
+  getMaxThinkingTokens,
   modelSupportsAdaptiveThinking,
   modelSupportsThinking,
   type ThinkingConfig,
@@ -270,7 +273,7 @@ type JsonArray = JsonValue[]
  * @param betaHeaders - An array of beta headers to include in the request.
  * @returns A JSON object representing the extra body parameters.
  */
-export function getExtraBodyParams(betaHeaders?: string[]): JsonObject {
+export function getExtraBodyParams(model?: string, betaHeaders?: string[]): JsonObject {
   // Parse user's extra body parameters first
   const extraBodyStr = process.env.CLAUDE_CODE_EXTRA_BODY
   let result: JsonObject = {}
@@ -299,18 +302,12 @@ export function getExtraBodyParams(betaHeaders?: string[]): JsonObject {
     }
   }
 
-  // Anti-distillation: send fake_tools opt-in for 1P CLI only
-  if (
-    feature('ANTI_DISTILLATION_CC')
-      ? process.env.CLAUDE_CODE_ENTRYPOINT === 'cli' &&
-        shouldIncludeFirstPartyOnlyBetas() &&
-        getFeatureValue_CACHED_MAY_BE_STALE(
-          'tengu_anti_distill_fake_tool_injection',
-          false,
-        )
-      : false
-  ) {
-    result.anti_distillation = ['fake_tools']
+  // OpenRouter provider preference (only applied to GLM models to avoid blocking other models)
+  if (process.env.OPENROUTER_API_KEY && model?.includes('glm')) {
+    result.provider = {
+      order: ["Friendli", "io.net", "Parasail"],
+      allow_fallbacks: false
+    };
   }
 
   // Handle beta headers if provided
@@ -552,7 +549,7 @@ export async function verifyApiKey(
           }),
         async anthropic => {
           const messages: MessageParam[] = [{ role: 'user', content: 'test' }]
-          
+
           await anthropic.beta.messages.create({
             model,
             max_tokens: 1,
@@ -560,7 +557,7 @@ export async function verifyApiKey(
             temperature: 1,
             ...(betas.length > 0 && { betas }),
             metadata: getAPIMetadata(),
-            ...getExtraBodyParams(),
+            ...getExtraBodyParams(model),
           })
           return true
         },
@@ -657,9 +654,9 @@ export function assistantMessageToMessageParam(
         content: message.message.content.map((_, i) => ({
           ..._,
           ...(i === message.message.content.length - 1 &&
-          _.type !== 'thinking' &&
-          _.type !== 'redacted_thinking' &&
-          (feature('CONNECTOR_TEXT') ? !isConnectorTextBlock(_) : true)
+            _.type !== 'thinking' &&
+            _.type !== 'redacted_thinking' &&
+            (feature('CONNECTOR_TEXT') ? !isConnectorTextBlock(_) : true)
             ? enablePromptCaching
               ? { cache_control: getCacheControl({ querySource }) }
               : {}
@@ -861,7 +858,7 @@ export async function* executeNonStreamingRequest(
       )
 
       try {
-        
+
         return await anthropic.beta.messages.create(
           {
             ...adjustedParams,
@@ -1009,9 +1006,9 @@ export function stripExcessMediaItems(
     return before === toRemove
       ? msg
       : {
-          ...msg,
-          message: { ...msg.message, content: stripped },
-        }
+        ...msg,
+        message: { ...msg.message, content: stripped },
+      }
   }) as (UserMessage | AssistantMessage)[]
 }
 
@@ -1057,7 +1054,7 @@ async function* queryModel(
 
   const resolvedModel =
     getAPIProvider() === 'bedrock' &&
-    options.model.includes('application-inference-profile')
+      options.model.includes('application-inference-profile')
       ? ((await getInferenceProfileBackingModel(options.model)) ??
         options.model)
       : options.model
@@ -1482,16 +1479,16 @@ async function* queryModel(
       isUsingOverage: currentLimits.isUsingOverage ?? false,
       cachedMCEnabled: cacheEditingHeaderLatched,
       effortValue: effort,
-      extraBodyParams: getExtraBodyParams(),
+      extraBodyParams: getExtraBodyParams(options.model),
     })
   }
 
   const newContext: LLMRequestNewContext | undefined = isBetaTracingEnabled()
     ? {
-        systemPrompt: systemPrompt.join('\n\n'),
-        querySource: options.querySource,
-        tools: jsonStringify(allTools),
-      }
+      systemPrompt: systemPrompt.join('\n\n'),
+      querySource: options.querySource,
+      tools: jsonStringify(allTools),
+    }
     : undefined
 
   // Capture the span so we can pass it to endLLMRequestSpan later
@@ -1510,7 +1507,7 @@ async function* queryModel(
   let stream: Stream<BetaRawMessageStreamEvent> | undefined = undefined
   let streamRequestId: string | null | undefined = undefined
   let clientRequestId: string | undefined = undefined
-  
+
   let streamResponse: Response | undefined = undefined
 
   // Release all stream resources to prevent native memory leaks.
@@ -1521,7 +1518,7 @@ async function* queryModel(
     cleanupStream(stream)
     stream = undefined
     if (streamResponse) {
-      streamResponse.body?.cancel().catch(() => {})
+      streamResponse.body?.cancel().catch(() => { })
       streamResponse = undefined
     }
   }
@@ -1551,11 +1548,11 @@ async function* queryModel(
     const bedrockBetas =
       getAPIProvider() === 'bedrock'
         ? [
-            ...getBedrockExtraBodyParamsBetas(retryContext.model),
-            ...(toolSearchHeader ? [toolSearchHeader] : []),
-          ]
+          ...getBedrockExtraBodyParamsBetas(retryContext.model),
+          ...(toolSearchHeader ? [toolSearchHeader] : []),
+        ]
         : []
-    const extraBodyParams = getExtraBodyParams(bedrockBetas)
+    const extraBodyParams = getExtraBodyParams(options.model, bedrockBetas)
 
     const outputConfig: BetaOutputConfig = {
       ...((extraBodyParams.output_config as BetaOutputConfig) ?? {}),
@@ -1603,25 +1600,37 @@ async function* queryModel(
     // without notifying the model launch DRI and research. This is a sensitive
     // setting that can greatly affect model quality and bashing.
     if (hasThinking && modelSupportsThinking(options.model)) {
+      // Determine budget first
+      const globalBudget = getMaxThinkingTokens()
+      let thinkingBudget = getMaxThinkingTokensForModel(options.model)
       if (
+        thinkingConfig.type === 'enabled' &&
+        thinkingConfig.budgetTokens !== undefined
+      ) {
+        thinkingBudget = thinkingConfig.budgetTokens
+      } else if (globalBudget !== undefined) {
+        thinkingBudget = globalBudget
+      }
+
+      const hasManualBudget = !!(
+        (thinkingConfig.type === 'enabled' &&
+          thinkingConfig.budgetTokens !== undefined) ||
+        globalBudget !== undefined
+      )
+
+      if (
+        !hasManualBudget &&
         !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING) &&
         modelSupportsAdaptiveThinking(options.model)
       ) {
-        // For models that support adaptive thinking, always use adaptive
-        // thinking without a budget.
+        // For models that support adaptive thinking, only use adaptive
+        // thinking if no manual budget is specified.
         thinking = {
           type: 'adaptive',
         } satisfies BetaMessageStreamParams['thinking']
-      } else {
-        // For models that do not support adaptive thinking, use the default
-        // thinking budget unless explicitly specified.
-        let thinkingBudget = getMaxThinkingTokensForModel(options.model)
-        if (
-          thinkingConfig.type === 'enabled' &&
-          thinkingConfig.budgetTokens !== undefined
-        ) {
-          thinkingBudget = thinkingConfig.budgetTokens
-        }
+      } else if (thinkingBudget > 0) {
+        // For models that do not support adaptive thinking, OR if a manual
+        // budget is specified, use the thinking budget.
         thinkingBudget = Math.min(maxOutputTokens - 1, thinkingBudget)
         thinking = {
           budget_tokens: thinkingBudget,
@@ -1719,8 +1728,8 @@ async function* queryModel(
       ...(contextManagement &&
         useBetas &&
         betasParams.includes(CONTEXT_MANAGEMENT_BETA_HEADER) && {
-          context_management: contextManagement,
-        }),
+        context_management: contextManagement,
+      }),
       ...extraBodyParams,
       ...(Object.keys(outputConfig).length > 0 && {
         output_config: outputConfig,
@@ -1819,7 +1828,7 @@ async function* queryModel(
         // Use raw stream instead of BetaMessageStream to avoid O(n²) partial JSON parsing
         // BetaMessageStream calls partialParse() on every input_json_delta, which we don't need
         // since we handle tool input accumulation ourselves
-        
+
         const result = await anthropic.beta.messages
           .create(
             { ...params, stream: true },
@@ -2079,7 +2088,7 @@ async function* queryModel(
                 })
                 throw new Error('Content block is not a connector_text block')
               }
-              ;(contentBlock as { connector_text: string }).connector_text += delta.connector_text
+              ; (contentBlock as { connector_text: string }).connector_text += delta.connector_text
             } else {
               switch (delta.type) {
                 case 'citations_delta':
@@ -2123,7 +2132,7 @@ async function* queryModel(
                     })
                     throw new Error('Content block is not a text block')
                   }
-                  ;(contentBlock as { text: string }).text += delta.text
+                  ; (contentBlock as { text: string }).text += delta.text
                   break
                 case 'signature_delta':
                   if (
@@ -2158,7 +2167,7 @@ async function* queryModel(
                     })
                     throw new Error('Content block is not a thinking block')
                   }
-                  ;(contentBlock as { thinking: string }).thinking += delta.thinking
+                  ; (contentBlock as { thinking: string }).thinking += delta.thinking
                   break
               }
             }
@@ -2256,6 +2265,22 @@ async function* queryModel(
               options.model,
             )
 
+            // OpenRouter reports actual cost in usage.cost / usage_cost_details
+            // This is the real billed amount, more accurate than our modelCost.ts estimates
+            const orUsage = part.usage as Record<string, unknown> | undefined
+            const orCost = orUsage?.cost ?? orUsage?.cost_details?.upstream_inference_cost
+            if (typeof orCost === 'number' && orCost > 0) {
+              addOpenRouterActualCost(orCost)
+            }
+
+            // Track last request usage for UI display (per-request, not cumulative)
+            const lastInputTokens = usage.input_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0)
+            if (typeof orCost === 'number' && orCost > 0) {
+              setLastRequestUsage(lastInputTokens, usage.output_tokens, orCost, orCost)
+            } else {
+              setLastRequestUsage(lastInputTokens, usage.output_tokens, costUSDForPart, 0)
+            }
+
             const refusalMessage = getErrorMessageIfRefusal(
               part.delta.stop_reason,
               options.model,
@@ -2269,9 +2294,8 @@ async function* queryModel(
                 max_tokens: maxOutputTokens,
               })
               yield createAssistantAPIErrorMessage({
-                content: `${API_ERROR_MESSAGE_PREFIX}: Claude's response exceeded the ${
-                  maxOutputTokens
-                } output token maximum. To configure this behavior, set the CLAUDE_CODE_MAX_OUTPUT_TOKENS environment variable.`,
+                content: `${API_ERROR_MESSAGE_PREFIX}: Claude's response exceeded the ${maxOutputTokens
+                  } output token maximum. To configure this behavior, set the CLAUDE_CODE_MAX_OUTPUT_TOKENS environment variable.`,
                 apiError: 'max_output_tokens',
                 error: 'max_output_tokens',
               })
@@ -2395,7 +2419,7 @@ async function* queryModel(
       // Process fallback percentage header and quota status if available
       // streamResponse is set when the stream is created in the withRetry callback above
       // TypeScript's control flow analysis can't track that streamResponse is set in the callback
-      
+
       const resp = streamResponse as unknown as Response | undefined
       if (resp) {
         extractQuotaStatusFromHeaders(resp.headers)
@@ -2486,8 +2510,8 @@ async function* queryModel(
             streamingError instanceof Error
               ? (streamingError.name as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS)
               : (String(
-                  streamingError,
-                ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS),
+                streamingError,
+              ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS),
           attemptNumber,
           maxOutputTokens,
           thinkingType:
@@ -2518,8 +2542,8 @@ async function* queryModel(
           streamingError instanceof Error
             ? (streamingError.name as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS)
             : (String(
-                streamingError,
-              ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS),
+              streamingError,
+            ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS),
         attemptNumber,
         maxOutputTokens,
         thinkingType:
@@ -2584,8 +2608,8 @@ async function* queryModel(
         timestamp: new Date().toISOString(),
         ...(process.env.USER_TYPE === 'ant' &&
           research !== undefined && {
-            research,
-          }),
+          research,
+        }),
         ...(advisorModel && {
           advisorModel,
         }),
@@ -2828,6 +2852,21 @@ async function* queryModel(
         fallbackUsage as unknown as BetaUsage,
         options.model,
       )
+      // OpenRouter actual cost for fallback (non-streaming) path
+      const orFallbackUsage = fallbackUsage as Record<string, unknown> | undefined
+      const orFallbackCost = orFallbackUsage?.cost ?? orFallbackUsage?.cost_details?.upstream_inference_cost
+      if (typeof orFallbackCost === 'number' && orFallbackCost > 0) {
+        addOpenRouterActualCost(orFallbackCost)
+      }
+
+      // Track last request usage for UI display (fallback path)
+      const lastFallbackInput = fallbackUsage.input_tokens + (fallbackUsage.cache_creation_input_tokens ?? 0) + (fallbackUsage.cache_read_input_tokens ?? 0)
+      setLastRequestUsage(
+        lastFallbackInput,
+        fallbackUsage.output_tokens,
+        fallbackCost,
+        typeof orFallbackCost === 'number' && orFallbackCost > 0 ? orFallbackCost : 0,
+      )
     }
   }
 
@@ -2936,12 +2975,12 @@ export function updateUsage(
         : usage.input_tokens,
     cache_creation_input_tokens:
       partUsage.cache_creation_input_tokens !== null &&
-      partUsage.cache_creation_input_tokens > 0
+        partUsage.cache_creation_input_tokens > 0
         ? partUsage.cache_creation_input_tokens
         : usage.cache_creation_input_tokens,
     cache_read_input_tokens:
       partUsage.cache_read_input_tokens !== null &&
-      partUsage.cache_read_input_tokens > 0
+        partUsage.cache_read_input_tokens > 0
         ? partUsage.cache_read_input_tokens
         : usage.cache_read_input_tokens,
     output_tokens: partUsage.output_tokens ?? usage.output_tokens,
@@ -2970,16 +3009,16 @@ export function updateUsage(
     // from overwriting the real value with 0.
     ...(feature('CACHED_MICROCOMPACT')
       ? {
-          cache_deleted_input_tokens:
-            (partUsage as unknown as { cache_deleted_input_tokens?: number })
-              .cache_deleted_input_tokens != null &&
+        cache_deleted_input_tokens:
+          (partUsage as unknown as { cache_deleted_input_tokens?: number })
+            .cache_deleted_input_tokens != null &&
             (partUsage as unknown as { cache_deleted_input_tokens: number })
               .cache_deleted_input_tokens > 0
-              ? (partUsage as unknown as { cache_deleted_input_tokens: number })
-                  .cache_deleted_input_tokens
-              : ((usage as unknown as { cache_deleted_input_tokens?: number })
-                  .cache_deleted_input_tokens ?? 0),
-        }
+            ? (partUsage as unknown as { cache_deleted_input_tokens: number })
+              .cache_deleted_input_tokens
+            : ((usage as unknown as { cache_deleted_input_tokens?: number })
+              .cache_deleted_input_tokens ?? 0),
+      }
       : {}),
     inference_geo: usage.inference_geo,
     iterations: partUsage.iterations ?? usage.iterations,
@@ -3024,13 +3063,13 @@ export function accumulateUsage(
     // the string out of external builds.
     ...(feature('CACHED_MICROCOMPACT')
       ? {
-          cache_deleted_input_tokens:
-            ((totalUsage as unknown as { cache_deleted_input_tokens?: number })
-              .cache_deleted_input_tokens ?? 0) +
-            ((
-              messageUsage as unknown as { cache_deleted_input_tokens?: number }
-            ).cache_deleted_input_tokens ?? 0),
-        }
+        cache_deleted_input_tokens:
+          ((totalUsage as unknown as { cache_deleted_input_tokens?: number })
+            .cache_deleted_input_tokens ?? 0) +
+          ((
+            messageUsage as unknown as { cache_deleted_input_tokens?: number }
+          ).cache_deleted_input_tokens ?? 0),
+      }
       : {}),
     inference_geo: messageUsage.inference_geo, // Use the most recent
     iterations: messageUsage.iterations, // Use the most recent
@@ -3228,11 +3267,11 @@ export function buildSystemPromptBlocks(
       text: block.text,
       ...(enablePromptCaching &&
         block.cacheScope !== null && {
-          cache_control: getCacheControl({
-            scope: block.cacheScope,
-            querySource: options?.querySource,
-          }),
+        cache_control: getCacheControl({
+          scope: block.cacheScope,
+          querySource: options?.querySource,
         }),
+      }),
     }
   })
 }

@@ -98,6 +98,9 @@ function familyHasSpecificEntries(
  * 3. Full model IDs ("claude-opus-4-5-20251101") — exact match only
  */
 export function isModelAllowed(model: string): boolean {
+  if (process.env.OPENROUTER_API_KEY) {
+    return true // OpenRouter support any model string
+  }
   const settings = getSettings_DEPRECATED() || {}
   const { availableModels } = settings
   if (!availableModels) {
