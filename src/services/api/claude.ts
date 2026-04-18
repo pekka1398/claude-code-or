@@ -130,6 +130,8 @@ import {
   setPromptCache1hAllowlist,
   setPromptCache1hEligible,
   setThinkingClearLatched,
+  addOpenRouterActualCost,
+  setLastRequestUsage,
 } from 'src/bootstrap/state.js'
 import {
   AFK_MODE_BETA_HEADER,
@@ -2263,6 +2265,22 @@ async function* queryModel(
               options.model,
             )
 
+            // OpenRouter reports actual cost in usage.cost / usage_cost_details
+            // This is the real billed amount, more accurate than our modelCost.ts estimates
+            const orUsage = part.usage as Record<string, unknown> | undefined
+            const orCost = orUsage?.cost ?? orUsage?.cost_details?.upstream_inference_cost
+            if (typeof orCost === 'number' && orCost > 0) {
+              addOpenRouterActualCost(orCost)
+            }
+
+            // Track last request usage for UI display (per-request, not cumulative)
+            const lastInputTokens = usage.input_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0)
+            if (typeof orCost === 'number' && orCost > 0) {
+              setLastRequestUsage(lastInputTokens, usage.output_tokens, orCost, orCost)
+            } else {
+              setLastRequestUsage(lastInputTokens, usage.output_tokens, costUSDForPart, 0)
+            }
+
             const refusalMessage = getErrorMessageIfRefusal(
               part.delta.stop_reason,
               options.model,
@@ -2833,6 +2851,21 @@ async function* queryModel(
         fallbackCost,
         fallbackUsage as unknown as BetaUsage,
         options.model,
+      )
+      // OpenRouter actual cost for fallback (non-streaming) path
+      const orFallbackUsage = fallbackUsage as Record<string, unknown> | undefined
+      const orFallbackCost = orFallbackUsage?.cost ?? orFallbackUsage?.cost_details?.upstream_inference_cost
+      if (typeof orFallbackCost === 'number' && orFallbackCost > 0) {
+        addOpenRouterActualCost(orFallbackCost)
+      }
+
+      // Track last request usage for UI display (fallback path)
+      const lastFallbackInput = fallbackUsage.input_tokens + (fallbackUsage.cache_creation_input_tokens ?? 0) + (fallbackUsage.cache_read_input_tokens ?? 0)
+      setLastRequestUsage(
+        lastFallbackInput,
+        fallbackUsage.output_tokens,
+        fallbackCost,
+        typeof orFallbackCost === 'number' && orFallbackCost > 0 ? orFallbackCost : 0,
       )
     }
   }

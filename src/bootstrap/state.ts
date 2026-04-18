@@ -63,6 +63,14 @@ type State = {
   totalLinesAdded: number
   totalLinesRemoved: number
   hasUnknownModelCost: boolean
+  // OpenRouter reports actual cost in the API response usage object.
+  // When available, this overrides the estimated cost from modelCost.ts.
+  openRouterActualCostUSD: number
+  // Last API response usage (per-request, not cumulative)
+  lastRequestInputTokens: number
+  lastRequestOutputTokens: number
+  lastRequestCostUSD: number
+  lastRequestORCostUSD: number
   cwd: string
   modelUsage: { [modelName: string]: ModelUsage }
   mainLoopModelOverride: ModelSetting | undefined
@@ -292,6 +300,11 @@ function getInitialState(): State {
     totalLinesAdded: 0,
     totalLinesRemoved: 0,
     hasUnknownModelCost: false,
+    openRouterActualCostUSD: 0,
+    lastRequestInputTokens: 0,
+    lastRequestOutputTokens: 0,
+    lastRequestCostUSD: 0,
+    lastRequestORCostUSD: 0,
     cwd: resolvedCwd,
     modelUsage: {},
     mainLoopModelOverride: undefined,
@@ -567,6 +580,37 @@ export function getTotalCostUSD(): number {
   return STATE.totalCostUSD
 }
 
+export function getOpenRouterActualCostUSD(): number {
+  return STATE.openRouterActualCostUSD
+}
+
+export function addOpenRouterActualCost(cost: number): void {
+  STATE.openRouterActualCostUSD += cost
+}
+
+export function setLastRequestUsage(inputTokens: number, outputTokens: number, costUSD: number, orCostUSD: number): void {
+  STATE.lastRequestInputTokens = inputTokens
+  STATE.lastRequestOutputTokens = outputTokens
+  STATE.lastRequestCostUSD = costUSD
+  STATE.lastRequestORCostUSD = orCostUSD
+}
+
+export function getLastRequestInputTokens(): number {
+  return STATE.lastRequestInputTokens
+}
+
+export function getLastRequestOutputTokens(): number {
+  return STATE.lastRequestOutputTokens
+}
+
+export function getLastRequestCostUSD(): number {
+  return STATE.lastRequestCostUSD
+}
+
+export function getLastRequestORCostUSD(): number {
+  return STATE.lastRequestORCostUSD
+}
+
 export function getTotalAPIDuration(): number {
   return STATE.totalAPIDuration
 }
@@ -722,9 +766,21 @@ export function getTotalWebSearchRequests(): number {
 }
 
 let outputTokensAtTurnStart = 0
+let inputTokensAtTurnStart = 0
+let costAtTurnStart = 0
+let orCostAtTurnStart = 0
 let currentTurnTokenBudget: number | null = null
 export function getTurnOutputTokens(): number {
   return getTotalOutputTokens() - outputTokensAtTurnStart
+}
+export function getTurnInputTokens(): number {
+  return getTotalInputTokens() + getTotalCacheCreationInputTokens() + getTotalCacheReadInputTokens() - inputTokensAtTurnStart
+}
+export function getTurnCostUSD(): number {
+  return getTotalCostUSD() - costAtTurnStart
+}
+export function getTurnOpenRouterCostUSD(): number {
+  return STATE.openRouterActualCostUSD - orCostAtTurnStart
 }
 export function getCurrentTurnTokenBudget(): number | null {
   return currentTurnTokenBudget
@@ -732,6 +788,9 @@ export function getCurrentTurnTokenBudget(): number | null {
 let budgetContinuationCount = 0
 export function snapshotOutputTokensForTurn(budget: number | null): void {
   outputTokensAtTurnStart = getTotalOutputTokens()
+  inputTokensAtTurnStart = getTotalInputTokens() + getTotalCacheCreationInputTokens() + getTotalCacheReadInputTokens()
+  costAtTurnStart = getTotalCostUSD()
+  orCostAtTurnStart = STATE.openRouterActualCostUSD
   currentTurnTokenBudget = budget
   budgetContinuationCount = 0
 }
@@ -863,6 +922,7 @@ export function setSdkBetas(betas: string[] | undefined): void {
 
 export function resetCostState(): void {
   STATE.totalCostUSD = 0
+  STATE.openRouterActualCostUSD = 0
   STATE.totalAPIDuration = 0
   STATE.totalAPIDurationWithoutRetries = 0
   STATE.totalToolDuration = 0
@@ -924,6 +984,9 @@ export function resetStateForTests(): void {
     STATE[key as keyof State] = value as never
   })
   outputTokensAtTurnStart = 0
+  inputTokensAtTurnStart = 0
+  costAtTurnStart = 0
+  orCostAtTurnStart = 0
   currentTurnTokenBudget = null
   budgetContinuationCount = 0
   sessionSwitched.clear()
