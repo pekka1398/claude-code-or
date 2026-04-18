@@ -101,6 +101,12 @@ export function modelSupportsThinking(model: string): boolean {
   // launch DRI and research. This can greatly affect model quality and bashing.
   const canonical = getCanonicalName(model)
   const provider = getAPIProvider()
+  // If we're using OpenRouter, we assume the user knows what they're doing
+  // and we let the backend handle the thinking capability check.
+  if (process.env.OPENROUTER_API_KEY) {
+    return true
+  }
+
   // 1P and Foundry: all Claude 4+ models (including Haiku 4.5)
   if (provider === 'foundry' || provider === 'firstParty') {
     return !canonical.includes('claude-3-')
@@ -144,8 +150,9 @@ export function modelSupportsAdaptiveThinking(model: string): boolean {
 }
 
 export function shouldEnableThinkingByDefault(): boolean {
-  if (process.env.MAX_THINKING_TOKENS) {
-    return parseInt(process.env.MAX_THINKING_TOKENS, 10) > 0
+  const budget = getMaxThinkingTokens();
+  if (budget !== undefined) {
+    return budget > 0;
   }
 
   const { settings } = getSettingsWithErrors()
@@ -159,4 +166,14 @@ export function shouldEnableThinkingByDefault(): boolean {
 
   // Enable thinking by default unless explicitly disabled.
   return true
+}
+
+export function getMaxThinkingTokens(): number | undefined {
+  if (process.env.MAX_THINKING_TOKENS) {
+    const budget = parseInt(process.env.MAX_THINKING_TOKENS, 10);
+    if (!isNaN(budget)) {
+      return budget;
+    }
+  }
+  return undefined;
 }
