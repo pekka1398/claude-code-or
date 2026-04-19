@@ -302,12 +302,15 @@ export function getExtraBodyParams(model?: string, betaHeaders?: string[]): Json
     }
   }
 
-  // OpenRouter provider preference (only applied to GLM models to avoid blocking other models)
-  if (process.env.OPENROUTER_API_KEY && model?.includes('glm')) {
+  // OpenRouter: set provider order to prefer high-cache-hit-rate providers.
+  // SiliconFlow (91.1% cache hit) -> DeepInfra (94.4%) -> Friendli (47.9%).
+  // allow_fallbacks: true preserves sticky routing on the fallback path so
+  // cache stays warm within each provider across requests.
+  if (getAPIProvider() === 'openrouter') {
     result.provider = {
-      order: ["Friendli", "io.net", "Parasail"],
-      allow_fallbacks: false
-    };
+      order: ['SiliconFlow', 'DeepInfra', 'Friendli'],
+      allow_fallbacks: true,
+    }
   }
 
   // Handle beta headers if provided

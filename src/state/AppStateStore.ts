@@ -155,6 +155,11 @@ export type AppState = DeepImmutable<{
   replBridgeInitialName: string | undefined
   // Always-on bridge: first-time remote dialog pending (set by /remote-control command)
   showRemoteCallout: boolean
+  // Discord bridge state
+  discordBridgeEnabled: boolean
+  discordBridgeConnected: boolean
+  discordBridgeError: string | undefined
+  discordChannelId: string | undefined
 }> & {
   // Unified task state - excluded from DeepImmutable because TaskState contains function types
   tasks: { [taskId: string]: TaskState }
@@ -497,6 +502,10 @@ export function getDefaultAppState(): AppState {
     replBridgeError: undefined,
     replBridgeInitialName: undefined,
     showRemoteCallout: false,
+    discordBridgeEnabled: false,
+    discordBridgeConnected: false,
+    discordBridgeError: undefined,
+    discordChannelId: undefined,
     toolPermissionContext: {
       ...getEmptyToolPermissionContext(),
       mode: initialMode,

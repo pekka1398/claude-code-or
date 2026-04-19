@@ -24,8 +24,10 @@ const MODEL_KEYS = Object.keys(ALL_MODEL_CONFIGS) as ModelKey[]
 
 function getBuiltinModelStrings(provider: APIProvider): ModelStrings {
   const out = {} as ModelStrings
+  // OpenRouter uses the same model strings as firstParty (Anthropic direct)
+  const lookupProvider = provider === 'openrouter' ? 'firstParty' : provider
   for (const key of MODEL_KEYS) {
-    out[key] = ALL_MODEL_CONFIGS[key][provider]
+    out[key] = ALL_MODEL_CONFIGS[key][lookupProvider]
   }
   return out
 }

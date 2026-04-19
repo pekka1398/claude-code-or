@@ -77,6 +77,7 @@
         "code-excerpt": "^4.0.0",
         "color-diff-napi": "workspace:*",
         "diff": "^8.0.4",
+        "discord.js": "^14.26.3",
         "emoji-regex": "^10.6.0",
         "env-paths": "^4.0.0",
         "execa": "^9.6.1",

@@ -66,9 +66,11 @@ const DEPRECATED_MODELS: Record<string, DeprecationEntry> = {
 function getDeprecatedModelInfo(modelId: string): DeprecationInfo {
   const lowercaseModelId = modelId.toLowerCase()
   const provider = getAPIProvider()
+  // OpenRouter has no provider-specific retirement dates; fall back to firstParty
+  const lookupProvider = provider === 'openrouter' ? 'firstParty' : provider
 
   for (const [key, value] of Object.entries(DEPRECATED_MODELS)) {
-    const retirementDate = value.retirementDates[provider]
+    const retirementDate = value.retirementDates[lookupProvider as APIProvider]
     if (!lowercaseModelId.includes(key) || !retirementDate) {
       continue
     }

@@ -147,6 +147,7 @@ function PromptInputFooter({
           {("external" as string) === 'ant' && isUndercover() && <Text dimColor>undercover</Text>}
           <TokenUsageMonitor isLoading={isLoading} />
           <BridgeStatusIndicator bridgeSelected={bridgeSelected} />
+          <DiscordStatusIndicator />
         </Box>
       </Box>
       {("external" as string) === 'ant' && <CoordinatorTaskPanel />}
@@ -189,4 +190,17 @@ function BridgeStatusIndicator({
       {status.label}
       {bridgeSelected && <Text dimColor> · Enter to view</Text>}
     </Text>;
+}
+
+function DiscordStatusIndicator(): React.ReactNode {
+  const connected = useAppState(s => s.discordBridgeConnected);
+  const enabled = useAppState(s => s.discordBridgeEnabled);
+  const channelId = useAppState(s => s.discordChannelId);
+
+  if (!enabled && !connected) return null;
+
+  if (connected) {
+    return <Text color="green" wrap="truncate">Discord ●</Text>;
+  }
+  return <Text color="yellow" wrap="truncate">Discord ◌</Text>;
 }
