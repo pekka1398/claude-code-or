@@ -191,7 +191,7 @@ export async function startDiscordBridge(
       : '📋 **Syncing conversation history...**'
     await sendToChannel(channel, header)
     for (const batch of batches) {
-      await sendToChannel(channel, batch)
+      await sendToChannelChunked(channel, batch)
     }
     await sendToChannel(channel, '✅ **History synced. Start chatting!**')
   }
@@ -200,7 +200,7 @@ export async function startDiscordBridge(
   const sessionId = channel.id
   const session = {
     getMessages,
-    lastMessageIndex: msgs.length,
+    lastMessageIndex: allMsgs.length,
     watcherInterval: null as ReturnType<typeof setInterval> | null,
   }
   activeSessions.set(sessionId, session)
@@ -239,10 +239,21 @@ export async function startDiscordBridge(
     let batch = ''
     for (const line of newLines) {
       if (batch && (batch.length + line.length + 2) > DISCORD_MAX_LENGTH) {
+        // Flush current batch (already within limit)
         sendToChannel(channel, batch)
-        batch = line
+        batch = ''
+      }
+      if (line.length > DISCORD_MAX_LENGTH) {
+        // Line itself exceeds limit — chunk it
+        if (batch) {
+          sendToChannel(channel, batch)
+          batch = ''
+        }
+        sendToChannelChunked(channel, line)
+      } else if (batch) {
+        batch = `${batch}\n\n${line}`
       } else {
-        batch = batch ? `${batch}\n\n${line}` : line
+        batch = line
       }
     }
     if (batch) sendToChannel(channel, batch)
