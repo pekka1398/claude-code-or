@@ -378,6 +378,10 @@ export function isPersistError(
  *     replaced with previews, mapped to the exact preview string shown to
  *     the model. Re-application is a Map lookup — no file I/O, guaranteed
  *     byte-identical, cannot fail.
+ *   - unfrozenAfterCacheMiss: when the provider's cache is known to be
+ *     unstable (e.g. OpenRouter without sticky routing), previously-frozen
+ *     IDs can be unfrozen after a confirmed cache miss, allowing the budget
+ *     to re-evaluate whether they should now be replaced.
  *
  * Lifecycle: one instance per conversation thread, carried on ToolUseContext.
  * Main thread: REPL provisions once, never resets — stale entries after
@@ -390,10 +394,13 @@ export function isPersistError(
 export type ContentReplacementState = {
   seenIds: Set<string>
   replacements: Map<string, string>
+  /** IDs that were in seenIds but have been unfrozen after a cache miss,
+   *  making them eligible for replacement again. Cleared on re-evaluation. */
+  unfrozenAfterCacheMiss: Set<string>
 }
 
 export function createContentReplacementState(): ContentReplacementState {
-  return { seenIds: new Set(), replacements: new Map() }
+  return { seenIds: new Set(), replacements: new Map(), unfrozenAfterCacheMiss: new Set() }
 }
 
 /**
@@ -408,6 +415,7 @@ export function cloneContentReplacementState(
   return {
     seenIds: new Set(source.seenIds),
     replacements: new Map(source.replacements),
+    unfrozenAfterCacheMiss: new Set(source.unfrozenAfterCacheMiss),
   }
 }
 
@@ -645,6 +653,10 @@ function collectCandidatesByMessage(
  *  - frozen: previously seen and left unreplaced → off-limits (replacing
  *    now would change a prefix that was already cached)
  *  - fresh: never seen → eligible for new replacement decisions
+ *
+ * IDs in unfrozenAfterCacheMiss are treated as fresh rather than frozen —
+ * the cache is known to be invalid, so re-evaluating them won't cause a
+ * cache miss that wouldn't have happened anyway.
  */
 function partitionByPriorDecision(
   candidates: ToolResultCandidate[],
@@ -655,7 +667,7 @@ function partitionByPriorDecision(
       const replacement = state.replacements.get(c.toolUseId)
       if (replacement !== undefined) {
         acc.mustReapply.push({ ...c, replacement })
-      } else if (state.seenIds.has(c.toolUseId)) {
+      } else if (state.seenIds.has(c.toolUseId) && !state.unfrozenAfterCacheMiss.has(c.toolUseId)) {
         acc.frozen.push(c)
       } else {
         acc.fresh.push(c)
@@ -933,6 +945,40 @@ export async function applyToolResultBudget(
     writeToTranscript?.(result.newlyReplaced)
   }
   return result.messages
+}
+
+/**
+ * Unfreeze previously-seen tool result IDs after a confirmed cache miss.
+ * When the prompt cache is known to be invalid (e.g. cache miss detected
+ * by promptCacheBreakDetection, or OpenRouter provider switch), there's
+ * no benefit to keeping old decisions frozen — the prefix will be rewritten
+ * regardless. Unfreezing allows the budget to re-evaluate whether previously-
+ * skipped large results should now be replaced, potentially shrinking the
+ * rewritten prefix.
+ *
+ * @param state — MUTATED: unfrozen IDs are added to unfrozenAfterCacheMiss
+ * @param ids — specific tool_use_ids to unfreeze, or omit to unfreeze all
+ *   seen-but-not-replaced IDs (nuclear option for full cache invalidation)
+ */
+export function unfreezeAfterCacheMiss(
+  state: ContentReplacementState | undefined,
+  ids?: string[],
+): void {
+  if (!state) return
+  if (ids) {
+    for (const id of ids) {
+      if (state.seenIds.has(id) && !state.replacements.has(id)) {
+        state.unfrozenAfterCacheMiss.add(id)
+      }
+    }
+  } else {
+    // Unfreeze all seen-but-not-replaced IDs
+    for (const id of state.seenIds) {
+      if (!state.replacements.has(id)) {
+        state.unfrozenAfterCacheMiss.add(id)
+      }
+    }
+  }
 }
 
 /**

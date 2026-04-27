@@ -183,6 +183,7 @@ import { calculateUSDCost } from 'src/utils/modelCost.js'
 import { endQueryProfile, queryCheckpoint } from 'src/utils/queryProfiler.js'
 import {
   getMaxThinkingTokens,
+  THINKING_TOKEN_HARD_CAP,
   modelSupportsAdaptiveThinking,
   modelSupportsThinking,
   type ThinkingConfig,
@@ -302,15 +303,21 @@ export function getExtraBodyParams(model?: string, betaHeaders?: string[]): Json
     }
   }
 
-  // OpenRouter: set provider order to prefer high-cache-hit-rate providers.
-  // SiliconFlow (91.1% cache hit) -> DeepInfra (94.4%) -> Friendli (47.9%).
-  // allow_fallbacks: true preserves sticky routing on the fallback path so
-  // cache stays warm within each provider across requests.
+  // OpenRouter: remove provider.order to allow OpenRouter's sticky routing to
+  // work. When provider.order is set, OpenRouter disables sticky routing and
+  // every request tries the ordered providers sequentially — this causes
+  // provider switches between turns, invalidating the prompt cache.
+  // Without provider.order, OpenRouter sticks to the provider that served the
+  // first request in the conversation, keeping the cache warm.
+  // A stable cache hit on a "mediocre" provider is far cheaper than a cache
+  // miss on the "best" provider (cache read = 0.1x input price vs full price).
+  //
+  // Previously: order: ['SiliconFlow', 'DeepInfra', 'Friendli'] — this
+  // prevented sticky routing and caused provider-hopping cache misses.
   if (getAPIProvider() === 'openrouter') {
-    result.provider = {
-      order: ['SiliconFlow', 'DeepInfra', 'Friendli'],
-      allow_fallbacks: true,
-    }
+    // No provider.order — let OpenRouter handle sticky routing automatically.
+    // Use provider.exclude only if a specific provider is known to be broken.
+    // result.provider = { exclude: [] }
   }
 
   // Handle beta headers if provided
@@ -398,6 +405,15 @@ function should1hCacheTTL(querySource?: QuerySource): boolean {
     getAPIProvider() === 'bedrock' &&
     isEnvTruthy(process.env.ENABLE_PROMPT_CACHING_1H_BEDROCK)
   ) {
+    return true
+  }
+
+  // OpenRouter supports 1h TTL for Anthropic models — it's passed through to
+  // the underlying provider (Anthropic, Bedrock, Vertex) per OpenRouter docs.
+  // With 1h TTL, the cache survives much longer between turns, dramatically
+  // reducing cache_creation costs. Combined with sticky routing (enabled by
+  // not setting provider.order), this keeps the cache warm across the session.
+  if (getAPIProvider() === 'openrouter') {
     return true
   }
 
@@ -1615,6 +1631,10 @@ async function* queryModel(
         thinkingBudget = globalBudget
       }
 
+      // Cap thinking budget to prevent excessive thinking that delays
+      // responses without proportional quality improvement.
+      thinkingBudget = Math.min(thinkingBudget, THINKING_TOKEN_HARD_CAP)
+
       const hasManualBudget = !!(
         (thinkingConfig.type === 'enabled' &&
           thinkingConfig.budgetTokens !== undefined) ||
@@ -1626,10 +1646,12 @@ async function* queryModel(
         !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING) &&
         modelSupportsAdaptiveThinking(options.model)
       ) {
-        // For models that support adaptive thinking, only use adaptive
-        // thinking if no manual budget is specified.
+        // For models that support adaptive thinking, use a capped budget
+        // instead of adaptive — adaptive thinking has no token limit and
+        // can spend far more than THINKING_TOKEN_HARD_CAP thinking.
         thinking = {
-          type: 'adaptive',
+          budget_tokens: Math.min(maxOutputTokens - 1, THINKING_TOKEN_HARD_CAP),
+          type: 'enabled',
         } satisfies BetaMessageStreamParams['thinking']
       } else if (thinkingBudget > 0) {
         // For models that do not support adaptive thinking, OR if a manual

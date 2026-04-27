@@ -1,4 +1,5 @@
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../analytics/growthbook.js'
+import { getAPIProvider } from '../../utils/model/providers.js'
 
 /**
  * GrowthBook config for time-based microcompact.
@@ -36,8 +37,30 @@ const TIME_BASED_MC_CONFIG_DEFAULTS: TimeBasedMCConfig = {
 export function getTimeBasedMCConfig(): TimeBasedMCConfig {
   // Hoist the GB read so exposure fires on every eval path, not just when
   // the caller's other conditions (querySource, messages.length) pass.
-  return getFeatureValue_CACHED_MAY_BE_STALE<TimeBasedMCConfig>(
+  const config = getFeatureValue_CACHED_MAY_BE_STALE<TimeBasedMCConfig>(
     'tengu_slate_heron',
     TIME_BASED_MC_CONFIG_DEFAULTS,
   )
+
+  // OpenRouter: enable time-based microcompact with a threshold matching the
+  // effective cache TTL. Without GrowthBook, the default config has enabled:false
+  // — 3P users never get time-based microcompact. Override to enabled:true.
+  // When 1h TTL is active, use 60 minutes to match the longer TTL.
+  // Otherwise use 5 minutes (the default cache TTL).
+  // This ensures we only clear content when the cache is genuinely expired,
+  // avoiding premature clearing that would force a cache miss.
+  //
+  // 1h TTL is enabled for OpenRouter in should1hCacheTTL() (claude.ts).
+  // Rather than import that function (circular dep risk), replicate the
+  // detection: OpenRouter always gets 1h TTL in our config.
+  if (getAPIProvider() === 'openrouter') {
+    const effectiveTTLMinutes = 60
+    return {
+      enabled: true,
+      gapThresholdMinutes: effectiveTTLMinutes,
+      keepRecent: config.keepRecent || 5,
+    }
+  }
+
+  return config
 }

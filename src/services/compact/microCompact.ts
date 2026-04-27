@@ -217,6 +217,11 @@ export type MicrocompactResult = {
   compactionInfo?: {
     pendingCacheEdits?: PendingCacheEdits
   }
+  /** True when time-based microcompact fired — the cache is known expired,
+   *  so the per-message budget should unfreeze previously-seen IDs to allow
+   *  re-evaluation. Without this, budget decisions made when the cache was
+   *  warm remain frozen even though the prefix will be rewritten anyway. */
+  cacheExpired?: boolean
 }
 
 /**
@@ -526,5 +531,5 @@ function maybeTimeBasedMicrocompact(
     notifyCacheDeletion(querySource)
   }
 
-  return { messages: result }
+  return { messages: result, cacheExpired: true }
 }

@@ -187,3 +187,10 @@ export function getMaxThinkingTokens(): number | undefined {
   }
   return undefined;
 }
+
+/**
+ * Hard cap on thinking tokens regardless of model defaults.
+ * Prevents the model from spending excessive tokens on long thinking chains
+ * that delay responses without proportional quality improvement.
+ */
+export const THINKING_TOKEN_HARD_CAP = 3000;

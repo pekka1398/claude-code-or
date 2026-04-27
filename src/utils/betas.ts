@@ -223,10 +223,16 @@ export function shouldIncludeFirstPartyOnlyBetas(): boolean {
  * Global-scope prompt caching is firstParty only. Foundry is excluded because
  * GrowthBook never bucketed Foundry users into the rollout experiment — the
  * treatment data is firstParty-only.
+ *
+ * OpenRouter is included because it forwards to Anthropic's API which supports
+ * global cache scope. This enables the static portion of the system prompt to
+ * be cached with scope:'global' (cross-session reuse), dramatically reducing
+ * cache_creation_input_tokens on every new session.
  */
 export function shouldUseGlobalCacheScope(): boolean {
+  const provider = getAPIProvider()
   return (
-    getAPIProvider() === 'firstParty' &&
+    (provider === 'firstParty' || provider === 'openrouter') &&
     !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS)
   )
 }
@@ -267,8 +273,12 @@ export const getAllModelBetas = memoize((model: string): string[] => {
   // renders those as a stub. SDK / print-mode keep summaries because callers
   // may iterate over thinking content. Users can opt back in via settings.json
   // showThinkingSummaries.
+  //
+  // OpenRouter: enabled because it forwards to Anthropic's API which supports
+  // redacted thinking. This reduces output token count significantly — instead
+  // of returning full thinking text, the API returns a compact signed summary.
   if (
-    includeFirstPartyOnlyBetas &&
+    (includeFirstPartyOnlyBetas || provider === 'openrouter') &&
     modelSupportsISP(model) &&
     !getIsNonInteractiveSession() &&
     getInitialSettings().showThinkingSummaries !== true
@@ -304,8 +314,12 @@ export const getAllModelBetas = memoize((model: string): string[] => {
 
   const thinkingPreservationEnabled = modelSupportsContextManagement(model)
 
+  // OpenRouter: enabled for thinking preservation because it forwards to
+  // Anthropic's API which supports context management. This allows the API
+  // to intelligently prune stale context from the conversation, reducing
+  // token usage on long sessions without requiring full compaction.
   if (
-    shouldIncludeFirstPartyOnlyBetas() &&
+    (shouldIncludeFirstPartyOnlyBetas() || provider === 'openrouter') &&
     (antOptedIntoToolClearing || thinkingPreservationEnabled)
   ) {
     betaHeaders.push(CONTEXT_MANAGEMENT_BETA_HEADER)
@@ -351,8 +365,11 @@ export const getAllModelBetas = memoize((model: string): string[] => {
     betaHeaders.push(WEB_SEARCH_BETA_HEADER)
   }
 
-  // Always send the beta header for 1P. The header is a no-op without a scope field.
-  if (includeFirstPartyOnlyBetas) {
+  // Always send the beta header for 1P and OpenRouter. The header is a no-op
+  // without a scope field. OpenRouter forwards to Anthropic's API which
+  // supports prompt-caching-scope, enabling global cache scope for the
+  // static portion of the system prompt.
+  if (includeFirstPartyOnlyBetas || provider === 'openrouter') {
     betaHeaders.push(PROMPT_CACHING_SCOPE_BETA_HEADER)
   }
 

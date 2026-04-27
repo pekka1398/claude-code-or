@@ -96,7 +96,7 @@ import { createDumpPromptsFetch } from './services/api/dumpPrompts.js'
 import { StreamingToolExecutor } from './services/tools/StreamingToolExecutor.js'
 import { queryCheckpoint } from './utils/queryProfiler.js'
 import { runTools } from './services/tools/toolOrchestration.js'
-import { applyToolResultBudget } from './utils/toolResultStorage.js'
+import { applyToolResultBudget, unfreezeAfterCacheMiss } from './utils/toolResultStorage.js'
 import { recordContentReplacement } from './utils/sessionStorage.js'
 import { handleStopHooks } from './query/stopHooks.js'
 import { buildQueryConfig } from './query/config.js'
@@ -417,6 +417,13 @@ async function* queryLoop(
       querySource,
     )
     messagesForQuery = microcompactResult.messages
+    // When time-based microcompact fires, the prompt cache is known expired.
+    // Unfreeze previously-seen tool result IDs in the per-message budget so
+    // they can be re-evaluated — the prefix will be rewritten regardless, so
+    // holding frozen decisions only prevents timely cleanup of large results.
+    if (microcompactResult.cacheExpired) {
+      unfreezeAfterCacheMiss(toolUseContext.contentReplacementState)
+    }
     // For cached microcompact (cache editing), defer boundary message until after
     // the API response so we can use actual cache_deleted_input_tokens.
     // Gated behind feature() so the string is eliminated from external builds.
