@@ -4,8 +4,8 @@ try {
   const fs = require('fs') as typeof import('fs')
   const path = require('path') as typeof import('path')
   const candidates = [
-    path.resolve(process.cwd(), '.env'),
     path.resolve(process.env.HOME || '', 'claude-code-or', '.env'),
+    path.resolve(process.cwd(), '.env'),
     path.resolve(process.env.HOME || '', '.env'),
   ]
   let envText = ''
