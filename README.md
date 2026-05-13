@@ -11,6 +11,7 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
 1. **Prerequisites**: [Bun](https://bun.sh/) must be installed.
 2. **Install Dependencies**:
    ```bash
+   curl -fsSL https://bun.com/install | bash
    bun install
    ```
 3. **Configure API Key**:
@@ -25,6 +26,15 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
    # Run
    claude-or
    ```
+5. **Discord Bridge** (optional — control Claude Code from your phone):
+   ```bash
+   export DISCORD_BOT_TOKEN="your_discord_bot_token"
+   export DISCORD_GUILD_ID="your_discord_server_id"
+   ```
+   - **Bot Token**: [Discord Developer Portal](https://discord.com/developers/applications) → New Application → Bot → Copy Token
+   - **Guild ID**: Discord Settings → Advanced → Developer Mode → right-click server icon → Copy Server ID
+   - **Bot Permissions**: Send Messages, Read Message History, Add Reactions, View Channels
+   - In the REPL, type `/discord` to connect. Each call creates a new channel with synced history.
 
 ---
 
