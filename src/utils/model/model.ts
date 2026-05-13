@@ -397,6 +397,10 @@ export function getPublicModelDisplayName(model: ModelName): string | null {
       return 'Haiku 4.5'
     case getModelStrings().haiku35:
       return 'Haiku 3.5'
+    case 'z-ai/glm-5.1':
+      return 'GLM 5.1'
+    case 'moonshotai/kimi-k2.6':
+      return 'Kimi K2.6'
     case 'google/gemini-3-flash-preview':
       return 'Gemini 3 Flash'
     default:

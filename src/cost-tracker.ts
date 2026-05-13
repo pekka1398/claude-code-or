@@ -5,6 +5,7 @@ import {
   addToTotalLinesChanged,
   getCostCounter,
   getModelUsage,
+  getOpenRouterActualCostUSD,
   getSdkBetas,
   getSessionId,
   getTokenCounter,
@@ -234,13 +235,45 @@ export function formatTotalCost(): string {
 
   const modelUsageDisplay = formatModelUsage()
 
+  // Cache efficiency stats
+  const totalCacheRead = getTotalCacheReadInputTokens()
+  const totalCacheWrite = getTotalCacheCreationInputTokens()
+  const totalInput = getTotalInputTokens()
+  const totalOutput = getTotalOutputTokens()
+  const hasCache = totalCacheRead > 0 || totalCacheWrite > 0
+
+  let cacheStats = ''
+  if (hasCache) {
+    const cacheable = totalCacheRead + totalCacheWrite + totalInput
+    const efficiency = cacheable > 0 ? (totalCacheRead / cacheable * 100) : 0
+    const savings = efficiency > 0
+      ? ` (~${formatCost((totalCacheRead / 1_000_000) * 0.10)} saved vs full input price)`
+      : ''
+    cacheStats = chalk.dim(
+      `\nCache read:            ${formatNumber(totalCacheRead)} tokens` +
+      `\nCache write:           ${formatNumber(totalCacheWrite)} tokens` +
+      `\nCache efficiency:      ${efficiency.toFixed(1)}%${savings}`
+    )
+  }
+
+  // OpenRouter actual cost vs estimated
+  let orCostLine = ''
+  const orCost = getOpenRouterActualCostUSD()
+  if (orCost > 0) {
+    orCostLine = chalk.dim(
+      `\nOpenRouter actual:     ${formatCost(orCost)}` +
+      (orCost !== getTotalCostUSD() ? ` (estimated: ${formatCost(getTotalCostUSD())})` : '')
+    )
+  }
+
   return chalk.dim(
     `Total cost:            ${costDisplay}\n` +
       `Total duration (API):  ${formatDuration(getTotalAPIDuration())}
 Total duration (wall): ${formatDuration(getTotalDuration())}
 Total code changes:    ${getTotalLinesAdded()} ${getTotalLinesAdded() === 1 ? 'line' : 'lines'} added, ${getTotalLinesRemoved()} ${getTotalLinesRemoved() === 1 ? 'line' : 'lines'} removed
-${modelUsageDisplay}`,
-  )
+${modelUsageDisplay}`) +
+    cacheStats +
+    orCostLine
 }
 
 function round(number: number, precision: number): number {

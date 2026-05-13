@@ -71,6 +71,8 @@ type State = {
   lastRequestOutputTokens: number
   lastRequestCostUSD: number
   lastRequestORCostUSD: number
+  lastRequestCacheReadTokens: number
+  lastRequestCacheWriteTokens: number
   cwd: string
   modelUsage: { [modelName: string]: ModelUsage }
   mainLoopModelOverride: ModelSetting | undefined
@@ -305,6 +307,8 @@ function getInitialState(): State {
     lastRequestOutputTokens: 0,
     lastRequestCostUSD: 0,
     lastRequestORCostUSD: 0,
+    lastRequestCacheReadTokens: 0,
+    lastRequestCacheWriteTokens: 0,
     cwd: resolvedCwd,
     modelUsage: {},
     mainLoopModelOverride: undefined,
@@ -588,11 +592,13 @@ export function addOpenRouterActualCost(cost: number): void {
   STATE.openRouterActualCostUSD += cost
 }
 
-export function setLastRequestUsage(inputTokens: number, outputTokens: number, costUSD: number, orCostUSD: number): void {
+export function setLastRequestUsage(inputTokens: number, outputTokens: number, costUSD: number, orCostUSD: number, cacheReadTokens?: number, cacheWriteTokens?: number): void {
   STATE.lastRequestInputTokens = inputTokens
   STATE.lastRequestOutputTokens = outputTokens
   STATE.lastRequestCostUSD = costUSD
   STATE.lastRequestORCostUSD = orCostUSD
+  STATE.lastRequestCacheReadTokens = cacheReadTokens ?? 0
+  STATE.lastRequestCacheWriteTokens = cacheWriteTokens ?? 0
 }
 
 export function getLastRequestInputTokens(): number {
@@ -609,6 +615,14 @@ export function getLastRequestCostUSD(): number {
 
 export function getLastRequestORCostUSD(): number {
   return STATE.lastRequestORCostUSD
+}
+
+export function getLastRequestCacheReadTokens(): number {
+  return STATE.lastRequestCacheReadTokens
+}
+
+export function getLastRequestCacheWriteTokens(): number {
+  return STATE.lastRequestCacheWriteTokens
 }
 
 export function getTotalAPIDuration(): number {

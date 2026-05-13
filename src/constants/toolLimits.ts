@@ -9,8 +9,11 @@
  *
  * Individual tools may declare a lower maxResultSizeChars, but this constant
  * acts as a system-wide cap regardless of what tools declare.
+ *
+ * 100K chars — raised from original 50K to keep more content inline for
+ * better cache hit rates on OpenRouter (cache read is cheap at ~$0.26/Mtok).
  */
-export const DEFAULT_MAX_RESULT_SIZE_CHARS = 50_000
+export const DEFAULT_MAX_RESULT_SIZE_CHARS = 100_000
 
 /**
  * Maximum size for tool results in tokens.

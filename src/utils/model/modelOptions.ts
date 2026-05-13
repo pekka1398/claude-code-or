@@ -372,6 +372,25 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
   } else {
     payg3pOptions.push(getHaikuOption())
   }
+
+  // Add OpenRouter-specific models (GLM, Kimi) when using OpenRouter
+  if (getAPIProvider() === 'openrouter') {
+    if (!payg3pOptions.some(opt => opt.value === 'z-ai/glm-5.1')) {
+      payg3pOptions.push({
+        value: 'z-ai/glm-5.1',
+        label: 'GLM 5.1',
+        description: 'DeepSeek-class reasoning, low cost',
+      })
+    }
+    if (!payg3pOptions.some(opt => opt.value === 'moonshotai/kimi-k2.6')) {
+      payg3pOptions.push({
+        value: 'moonshotai/kimi-k2.6',
+        label: 'Kimi K2.6',
+        description: 'MoE reasoning model, low cost',
+      })
+    }
+  }
+
   return payg3pOptions
 }
 

@@ -229,21 +229,28 @@ export class LogUpdate {
       const viewportY = prev.screen.height - prev.viewport.height
       const scrollbackRows = viewportY + 1
 
-      let scrollbackChangeY = -1
-      diffEach(prev.screen, next.screen, (_x, y) => {
-        if (y < scrollbackRows) {
-          scrollbackChangeY = y
-          return true // early exit
-        }
-      })
-      if (scrollbackChangeY >= 0) {
-        const prevLine = readLine(prev.screen, scrollbackChangeY)
-        const nextLine = readLine(next.screen, scrollbackChangeY)
-        return fullResetSequence_CAUSES_FLICKER(next, 'offscreen', stylePool, {
-          triggerY: scrollbackChangeY,
-          prevLine,
-          nextLine,
+      // When the user has scrolled away from the bottom, skip the scrollback
+      // diff check. Changes to off-screen rows aren't visible to the user,
+      // and a full reset would jump their viewport to the top — the
+      // scroll-jump-to-top bug. The next frame they scroll back to bottom
+      // will render correctly via the normal diff path.
+      if (!next.userScrolledAway) {
+        let scrollbackChangeY = -1
+        diffEach(prev.screen, next.screen, (_x, y) => {
+          if (y < scrollbackRows) {
+            scrollbackChangeY = y
+            return true // early exit
+          }
         })
+        if (scrollbackChangeY >= 0) {
+          const prevLine = readLine(prev.screen, scrollbackChangeY)
+          const nextLine = readLine(next.screen, scrollbackChangeY)
+          return fullResetSequence_CAUSES_FLICKER(next, 'offscreen', stylePool, {
+            triggerY: scrollbackChangeY,
+            prevLine,
+            nextLine,
+          })
+        }
       }
     }
 
@@ -341,8 +348,13 @@ export class LogUpdate {
       }
 
       // If the cell outside the viewport range has changed, we need to reset
-      // because we can't move the cursor there to draw.
+      // because we can't move the cursor there to draw. But when the user has
+      // scrolled away from the bottom, skip the reset — the off-screen rows
+      // aren't visible and a full reset would jump the viewport to the top.
       if (y < viewportY) {
+        if (next.userScrolledAway) {
+          return // skip this off-screen diff, don't trigger full reset
+        }
         needsFullReset = true
         resetTriggerY = y
         return true // early exit

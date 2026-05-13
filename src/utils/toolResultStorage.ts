@@ -109,6 +109,13 @@ export function getToolResultsDir(): string {
 export const PREVIEW_SIZE_BYTES = 2000
 
 /**
+ * Size in bytes for the head and tail portions of the preview.
+ * Each gets half of PREVIEW_SIZE_BYTES (1KB head + 1KB tail).
+ */
+const PREVIEW_HEAD_BYTES = 1000
+const PREVIEW_TAIL_BYTES = 1000
+
+/**
  * Get the filepath where a tool result would be persisted.
  */
 export function getToolResultPath(id: string, isJson: boolean): string {
@@ -191,9 +198,9 @@ export function buildLargeToolResultMessage(
 ): string {
   let message = `${PERSISTED_OUTPUT_TAG}\n`
   message += `Output too large (${formatFileSize(result.originalSize)}). Full output saved to: ${result.filepath}\n\n`
-  message += `Preview (first ${formatFileSize(PREVIEW_SIZE_BYTES)}):\n`
+  message += `Preview (head + tail, ${formatFileSize(PREVIEW_SIZE_BYTES)} total):\n`
   message += result.preview
-  message += result.hasMore ? '\n...\n' : '\n'
+  message += result.hasMore ? '\n' : '\n'
   message += PERSISTED_OUTPUT_CLOSING_TAG
   return message
 }
@@ -344,15 +351,25 @@ export function generatePreview(
     return { preview: content, hasMore: false }
   }
 
-  // Find the last newline within the limit to avoid cutting mid-line
-  const truncated = content.slice(0, maxBytes)
-  const lastNewline = truncated.lastIndexOf('\n')
+  // Extract head: first PREVIEW_HEAD_BYTES, aligned to newline boundary
+  const headSlice = content.slice(0, PREVIEW_HEAD_BYTES)
+  const headLastNewline = headSlice.lastIndexOf('\n')
+  const headCut = headLastNewline > PREVIEW_HEAD_BYTES * 0.5 ? headLastNewline : PREVIEW_HEAD_BYTES
+  const head = content.slice(0, headCut)
 
-  // If we found a newline reasonably close to the limit, use it
-  // Otherwise fall back to the exact limit
-  const cutPoint = lastNewline > maxBytes * 0.5 ? lastNewline : maxBytes
+  // Extract tail: last PREVIEW_TAIL_BYTES, aligned to newline boundary
+  const tailStart = content.length - PREVIEW_TAIL_BYTES
+  const tailSlice = content.slice(tailStart)
+  const tailFirstNewline = tailSlice.indexOf('\n')
+  const tailCut = tailFirstNewline >= 0 && tailFirstNewline < PREVIEW_TAIL_BYTES * 0.5
+    ? tailStart + tailFirstNewline + 1
+    : tailStart
+  const tail = content.slice(tailCut)
 
-  return { preview: content.slice(0, cutPoint), hasMore: true }
+  return {
+    preview: head + '\n...\n' + tail,
+    hasMore: true,
+  }
 }
 
 /**

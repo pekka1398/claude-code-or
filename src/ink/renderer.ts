@@ -6,9 +6,11 @@ import Output from './output.js'
 import renderNodeToOutput, {
   getScrollDrainNode,
   getScrollHint,
+  getUserScrolledAway,
   resetLayoutShifted,
   resetScrollDrainNode,
   resetScrollHint,
+  resetUserScrolledAway,
 } from './render-node-to-output.js'
 import { createScreen, type StylePool } from './screen.js'
 
@@ -78,6 +80,7 @@ export default function createRenderer(
         ),
         viewport: { width: terminalWidth, height: terminalRows },
         cursor: { x: 0, y: 0, visible: true },
+        userScrolledAway: false,
       }
     }
 
@@ -114,6 +117,7 @@ export default function createRenderer(
     resetLayoutShifted()
     resetScrollHint()
     resetScrollDrainNode()
+    resetUserScrolledAway()
 
     // prevFrameContaminated: selection overlay mutated the returned screen
     // buffer post-render (in ink.tsx), resetFramesForAltScreen() replaced it
@@ -146,6 +150,7 @@ export default function createRenderer(
     return {
       scrollHint: options.altScreen ? getScrollHint() : null,
       scrollDrainPending: drainNode !== null,
+      userScrolledAway: getUserScrolledAway(),
       screen: renderedScreen,
       viewport: {
         width: terminalWidth,

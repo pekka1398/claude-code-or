@@ -17,6 +17,10 @@ export type Frame = {
   readonly scrollHint?: ScrollHint | null
   /** A ScrollBox has remaining pendingScrollDelta — schedule another frame. */
   readonly scrollDrainPending?: boolean
+  /** True when a ScrollBox's stickyScroll was explicitly false this frame,
+   *  meaning the user actively scrolled away from the bottom. log-update.ts
+   *  uses this to avoid full-reset on scrollback changes (scroll-jump bug). */
+  readonly userScrolledAway?: boolean
 }
 
 export function emptyFrame(

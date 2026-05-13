@@ -98,6 +98,7 @@ import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
   logEvent,
 } from '../analytics/index.js'
+import { getAPIProvider } from '../../utils/model/providers.js'
 import {
   getMaxOutputTokensForModel,
   queryModelWithStreaming,
@@ -434,10 +435,14 @@ export async function compactConversation(
     // Experiment (Jan 2026) confirmed: false path is 98% cache miss, costs ~0.76% of
     // fleet cache_creation (~38B tok/day), concentrated in ephemeral envs (CCR/GHA/SDK)
     // with cold GB cache and 3P providers where GB is disabled. GB gate kept as kill-switch.
-    const promptCacheSharingEnabled = getFeatureValue_CACHED_MAY_BE_STALE(
-      'tengu_compact_cache_prefix',
-      true,
-    )
+    // OpenRouter: always enable cache sharing for compact. GrowthBook's cached
+    // value can be stale/false (3P users don't get GB experiments), which forces
+    // the streaming fallback path with a different system prompt + tools → total
+    // cache miss. The forked-agent path reuses the main thread's prefix and is
+    // strictly better when cache is available.
+    const promptCacheSharingEnabled = getAPIProvider() === 'openrouter'
+      ? true
+      : getFeatureValue_CACHED_MAY_BE_STALE('tengu_compact_cache_prefix', true)
 
     const compactPrompt = getCompactPrompt(customInstructions)
     const summaryRequest = createUserMessage({
@@ -1154,10 +1159,10 @@ async function streamCompactSummary({
   // main conversation's cached prefix (system prompt, tools, context messages).
   // Falls back to regular streaming path on failure.
   // 3P default: true — see comment at the other tengu_compact_cache_prefix read above.
-  const promptCacheSharingEnabled = getFeatureValue_CACHED_MAY_BE_STALE(
-    'tengu_compact_cache_prefix',
-    true,
-  )
+  // OpenRouter override: always true (see comment at the other read site).
+  const promptCacheSharingEnabled = getAPIProvider() === 'openrouter'
+    ? true
+    : getFeatureValue_CACHED_MAY_BE_STALE('tengu_compact_cache_prefix', true)
   // Send keep-alive signals during compaction to prevent remote session
   // WebSocket idle timeouts from dropping bridge connections. Compaction
   // API calls can take 5-10+ seconds, during which no other messages
@@ -1179,6 +1184,7 @@ async function streamCompactSummary({
 
   try {
     if (promptCacheSharingEnabled) {
+      logForDebugging(`[COMPACT] attempting forked-agent cache-sharing path (promptCacheSharingEnabled=true)`)
       try {
         // DO NOT set maxOutputTokens here. The fork piggybacks on the main thread's
         // prompt cache by sending identical cache-key params (system, tools, model,
@@ -1187,6 +1193,7 @@ async function streamCompactSummary({
         // creating a thinking config mismatch that invalidates the cache.
         // The streaming fallback path (below) can safely set maxOutputTokensOverride
         // since it doesn't share cache with the main thread.
+        logForDebugging(`[COMPACT] runForkedAgent starting, forkContextMessages=${cacheSafeParams.forkContextMessages?.length}, cacheSafeParams keys=${Object.keys(cacheSafeParams).join(',')}`)
         const result = await runForkedAgent({
           promptMessages: [summaryRequest],
           cacheSafeParams,
@@ -1200,10 +1207,12 @@ async function streamCompactSummary({
           // `signal: context.abortController.signal` below.
           overrides: { abortController: context.abortController },
         })
+        logForDebugging(`[COMPACT] runForkedAgent completed. messages=${result.messages.length} totalUsage: input=${result.totalUsage.input_tokens} cache_read=${result.totalUsage.cache_read_input_tokens} cache_write=${result.totalUsage.cache_creation_input_tokens} output=${result.totalUsage.output_tokens}`)
         const assistantMsg = getLastAssistantMessage(result.messages)
         const assistantText = assistantMsg
           ? getAssistantMessageText(assistantMsg)
           : null
+        logForDebugging(`[COMPACT] forked agent response: hasMsg=${!!assistantMsg} hasText=${!!assistantText} isApiError=${assistantMsg?.isApiErrorMessage} textLen=${assistantText?.length ?? 0} textPreview=${JSON.stringify(assistantText?.slice(0, 200))}`)
         // Guard isApiErrorMessage: query() catches API errors (including
         // APIUserAbortError on ESC) and yields them as synthetic assistant
         // messages. Without this check, an aborted compact "succeeds" with
@@ -1213,6 +1222,7 @@ async function streamCompactSummary({
           // Skip success logging for PTL error text — it's returned so the
           // caller's retry loop catches it, but it's not a successful summary.
           if (!assistantText.startsWith(PROMPT_TOO_LONG_ERROR_MESSAGE)) {
+            logForDebugging(`[COMPACT] forked-agent cache-sharing SUCCESS`)
             logEvent('tengu_compact_cache_sharing_success', {
               preCompactTokenCount,
               outputTokens: result.totalUsage.output_tokens,
@@ -1240,6 +1250,7 @@ async function streamCompactSummary({
           preCompactTokenCount,
         })
       } catch (error) {
+        logForDebugging(`[COMPACT] forked-agent THREW: ${error instanceof Error ? `${error.message} ${error.stack?.slice(0, 500)}` : String(error)}`, { level: 'error' })
         logError(error)
         logEvent('tengu_compact_cache_sharing_fallback', {
           reason:
@@ -1247,7 +1258,10 @@ async function streamCompactSummary({
           preCompactTokenCount,
         })
       }
+    } else {
+      logForDebugging(`[COMPACT] skipping forked-agent path (promptCacheSharingEnabled=false)`)
     }
+    logForDebugging(`[COMPACT] falling back to streaming path (no cache sharing)`)
 
     // Regular streaming path (fallback when cache sharing fails or is disabled)
     const retryEnabled = getFeatureValue_CACHED_MAY_BE_STALE(

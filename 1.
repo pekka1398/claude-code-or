@@ -1,0 +1,27 @@
+  in:35.5k(R:32.8k/W:0/N:2.7k) out:185 $0.0132(P:$0.0093)
+  in:37.4k(R:35.5k/W:0/N:2k) out:143 $0.0126(P:$0.0098)
+  in:42k(R:37.4k/W:0/N:4.6k) out:106 $0.0166(P:$0.0102)
+  in:46.4k(R:41.9k/W:0/N:4.4k) out:137 $0.0177(P:$0.0115)
+  in:48.5k(R:46.3k/W:0/N:2.2k) out:197 $0.016(P:$0.0129)
+  in:58.1k(R:48.4k/W:0/N:9.7k) out:104 $0.0266(P:$0.0131)
+
+
+  in:111.8k(R:111.4k/W:0/N:434) out:44 $0.0298(P:$0.0298)
+  in:97.3k(R:1.4M/W:0/N:0) out:5.3k $0.1598(P:$0.1598) <- 這筆是compact的花費
+
+
+
+   Debug mode in:84k(R:83.6k/W:0/N:380) out:626 $0.025(P:$0.025)  
+   in:71.5k(R:1k/W:0/N:70.5k) out:2.7k $0.1109(P:$0.1109) <- compact
+
+
+   ❯ ok                                                                                                                      
+  ⎿  API Error: 400 {"error":{"message":"Provider returned 
+     error","code":400,"metadata":{"raw":"{\"message\":\"messages.1.content.0: Invalid `signature` in `thinking`          
+     block\"}","provider_name":"Amazon Bedrock","is_byok":false}},"user_id":"user_38RSISzJyvepFvPVggwJvvvBT3F"}         
+                                                                                                                          
+❯ ok                                                                                                                      
+  ⎿  API Error: 400 {"error":{"message":"Provider returned                                                                
+     error","code":400,"metadata":{"raw":"{\"message\":\"messages.1.content.0: Invalid `signature` in `thinking`          
+     block\"}","provider_name":"Amazon Bedrock","is_byok":false}},"user_id":"user_38RSISzJyvepFvPVggwJvvvBT3F"}         
+                       

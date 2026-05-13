@@ -35,6 +35,7 @@ export function getPromptVariant(): PromptVariant {
 }
 
 export function shouldEnablePromptSuggestion(): boolean {
+  return false
   // Env var overrides everything (for testing)
   const envOverride = process.env.CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION
   if (isEnvDefinedFalsy(envOverride)) {

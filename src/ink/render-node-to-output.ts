@@ -103,6 +103,20 @@ export function consumeFollowScroll(): FollowScroll | null {
   return f
 }
 
+// Per-frame flag: true when a ScrollBox's stickyScroll is explicitly false,
+// meaning the user actively scrolled away from the bottom. Used by
+// log-update.ts to avoid full-reset on scrollback changes (which causes
+// the scroll-jump-to-top bug).
+let userScrolledAway = false
+
+export function resetUserScrolledAway(): void {
+  userScrolledAway = false
+}
+
+export function getUserScrolledAway(): boolean {
+  return userScrolledAway
+}
+
 // ── Native terminal drain (iTerm2/Ghostty/etc. — proportional events) ──
 // Minimum rows applied per frame. Above this, drain is proportional (~3/4
 // of remaining) so big bursts catch up in log₄ frames while the tail
@@ -756,6 +770,10 @@ function renderNodeToOutput(
         const scrollTopBeforeFollow = node.scrollTop ?? 0
         const sticky =
           node.stickyScroll ?? Boolean(node.attributes['stickyScroll'])
+        // When stickyScroll is explicitly false, the user scrolled away from
+        // bottom. Signal to log-update.ts to skip full-reset on scrollback
+        // changes, which causes the scroll-jump-to-top bug.
+        if (node.stickyScroll === false) userScrolledAway = true
         const prevMaxScroll = Math.max(0, prevScrollHeight - prevInnerHeight)
         // Positional check only valid when content grew — virtualization can
         // transiently SHRINK scrollHeight (tail unmount + stale heightCache

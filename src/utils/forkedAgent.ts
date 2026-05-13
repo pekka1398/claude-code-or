@@ -32,6 +32,7 @@ import {
   createUserMessage,
   extractTextContent,
   getLastAssistantMessage,
+  stripSignatureBlocks,
 } from './messages.js'
 import { createDenialTrackingState } from './permissions/denialTracking.js'
 import { parseToolListFromCLI } from './permissions/permissionSetup.js'
@@ -521,7 +522,16 @@ export async function runForkedAgent({
   // partial tool batches, orphaning the paired results (API 400). Dangling
   // tool_uses are repaired downstream by ensureToolResultPairing in claude.ts,
   // same as the main thread — identical post-repair prefix keeps the cache hit.
-  const initialMessages: Message[] = [...forkContextMessages, ...promptMessages]
+  //
+  // Strip signature-bearing blocks (thinking, redacted_thinking) from context
+  // messages. Their signatures are bound to the API key/provider that generated
+  // them; replaying through a different backend (e.g. OpenRouter → Bedrock)
+  // produces "Invalid signature in thinking block" 400 errors.
+  const safeForkContextMessages = stripSignatureBlocks(forkContextMessages)
+  const initialMessages: Message[] = [...safeForkContextMessages, ...promptMessages]
+
+  const strippedCount = forkContextMessages.length - safeForkContextMessages.length
+  logForDebugging(`[FORK:${forkLabel}] starting forked agent: forkContextMessages=${forkContextMessages.length} stripped=${strippedCount} promptMessages=${promptMessages.length} totalInitial=${initialMessages.length} systemPromptLen=${systemPrompt?.[0]?.length ?? 0} querySource=${querySource} maxTurns=${maxTurns} skipCacheWrite=${skipCacheWrite}`)
 
   // Generate agent ID and record initial messages for transcript
   // When skipTranscript is set, skip agent ID creation and all transcript I/O

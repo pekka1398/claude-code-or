@@ -133,6 +133,7 @@ import {
   addOpenRouterActualCost,
   setLastRequestUsage,
 } from 'src/bootstrap/state.js'
+import { computePredictedCost } from 'src/utils/cacheAwareConfig.js'
 import {
   AFK_MODE_BETA_HEADER,
   CONTEXT_1M_BETA_HEADER,
@@ -303,21 +304,31 @@ export function getExtraBodyParams(model?: string, betaHeaders?: string[]): Json
     }
   }
 
-  // OpenRouter: remove provider.order to allow OpenRouter's sticky routing to
-  // work. When provider.order is set, OpenRouter disables sticky routing and
-  // every request tries the ordered providers sequentially — this causes
-  // provider switches between turns, invalidating the prompt cache.
-  // Without provider.order, OpenRouter sticks to the provider that served the
-  // first request in the conversation, keeping the cache warm.
-  // A stable cache hit on a "mediocre" provider is far cheaper than a cache
-  // miss on the "best" provider (cache read = 0.1x input price vs full price).
-  //
-  // Previously: order: ['SiliconFlow', 'DeepInfra', 'Friendli'] — this
-  // prevented sticky routing and caused provider-hopping cache misses.
-  if (getAPIProvider() === 'openrouter') {
-    // No provider.order — let OpenRouter handle sticky routing automatically.
-    // Use provider.exclude only if a specific provider is known to be broken.
-    // result.provider = { exclude: [] }
+  // OpenRouter: set provider order to prefer providers with stable KV cache.
+  // Data from 12K+ requests shows:
+  //   SiliconFlow: 1.8% miss, 0 consecutive misses — most stable
+  //   Z.AI:        2.6% miss, 9 consecutive misses — mostly stable
+  //   DeepInfra:   0% miss but fp4 quant + 32K max output — acceptable fallback
+  //   AtlasCloud:  7.9% miss, multi-node no shared cache — same as Friendli
+  //   Friendli:    8.5% miss, 208 consecutive misses — disaster
+  //   Chutes:      75% miss — unusable
+  // A stable cache hit on a good provider is far cheaper than a cache miss
+  // on a bad one (cache read = ~0.2x input price vs full price).
+  // Only apply this restriction for models where we have cache data;
+  // other models need all providers available.
+  if (getAPIProvider() === 'openrouter' && model?.includes('glm-5')) {
+    result.provider = {
+      order: ['SiliconFlow', 'Z.AI', 'DeepInfra'],
+      only: ['SiliconFlow', 'Z.AI', 'DeepInfra'],
+    }
+  }
+  // Kimi K2.6: prefer SiliconFlow (SG, fp8, 49tps, good cache), DeepInfra (fp4 fallback).
+  // Avoid io.net (int4 + 32K context limit), low-uptime providers.
+  if (getAPIProvider() === 'openrouter' && model?.includes('kimi-k2')) {
+    result.provider = {
+      order: ['SiliconFlow', 'DeepInfra', 'io.net'],
+      only: ['SiliconFlow', 'DeepInfra', 'io.net'],
+    }
   }
 
   // Handle beta headers if provided
@@ -2016,6 +2027,7 @@ async function* queryModel(
             partialMessage = part.message
             ttftMs = Date.now() - start
             usage = updateUsage(usage, part.message?.usage)
+            logForDebugging(`[USAGE] message_start raw: input=${(part.message?.usage as any)?.input_tokens ?? 'n/a'} cache_read=${(part.message?.usage as any)?.cache_read_input_tokens ?? 'n/a'} cache_write=${(part.message?.usage as any)?.cache_creation_input_tokens ?? 'n/a'} output=${(part.message?.usage as any)?.output_tokens ?? 'n/a'}`)
             // Capture research from message_start if available (internal only).
             // Always overwrite with the latest value.
             if (
@@ -2247,6 +2259,7 @@ async function* queryModel(
           }
           case 'message_delta': {
             usage = updateUsage(usage, part.usage)
+            logForDebugging(`[USAGE] message_delta raw: input=${(part.usage as any).input_tokens ?? 'n/a'} cache_read=${(part.usage as any).cache_read_input_tokens ?? 'n/a'} cache_write=${(part.usage as any).cache_creation_input_tokens ?? 'n/a'} output=${(part.usage as any).output_tokens ?? 'n/a'} or_cost=${(part.usage as any).cost ?? (part.usage as any).cost_details?.upstream_inference_cost ?? 'n/a'}`)
             // Capture research from message_delta if available (internal only).
             // Always overwrite with the latest value. Also write back to
             // already-yielded messages since message_delta arrives after
@@ -2300,10 +2313,21 @@ async function* queryModel(
 
             // Track last request usage for UI display (per-request, not cumulative)
             const lastInputTokens = usage.input_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0)
+            const lastCacheRead = usage.cache_read_input_tokens ?? 0
+            const lastCacheWrite = usage.cache_creation_input_tokens ?? 0
+            // Predict cost: prefer cache-aware config pricing, fallback to modelCost.ts
+            // Note: usage.input_tokens is already the non-cached (new) input tokens,
+            // cache_read and cache_write are reported separately by the API.
+            const predictCost = computePredictedCost(options.model, {
+              input_new: usage.input_tokens,
+              cache_read: lastCacheRead,
+              cache_write: lastCacheWrite,
+              output: usage.output_tokens,
+            }) ?? costUSDForPart
             if (typeof orCost === 'number' && orCost > 0) {
-              setLastRequestUsage(lastInputTokens, usage.output_tokens, orCost, orCost)
+              setLastRequestUsage(lastInputTokens, usage.output_tokens, predictCost, orCost, lastCacheRead, lastCacheWrite)
             } else {
-              setLastRequestUsage(lastInputTokens, usage.output_tokens, costUSDForPart, 0)
+              setLastRequestUsage(lastInputTokens, usage.output_tokens, predictCost, 0, lastCacheRead, lastCacheWrite)
             }
 
             const refusalMessage = getErrorMessageIfRefusal(
@@ -2886,11 +2910,21 @@ async function* queryModel(
 
       // Track last request usage for UI display (fallback path)
       const lastFallbackInput = fallbackUsage.input_tokens + (fallbackUsage.cache_creation_input_tokens ?? 0) + (fallbackUsage.cache_read_input_tokens ?? 0)
+      const fallbackCacheRead = fallbackUsage.cache_read_input_tokens ?? 0
+      const fallbackCacheWrite = fallbackUsage.cache_creation_input_tokens ?? 0
+      const fallbackPredictCost = computePredictedCost(options.model, {
+        input_new: fallbackUsage.input_tokens,
+        cache_read: fallbackCacheRead,
+        cache_write: fallbackCacheWrite,
+        output: fallbackUsage.output_tokens,
+      }) ?? fallbackCost
       setLastRequestUsage(
         lastFallbackInput,
         fallbackUsage.output_tokens,
-        fallbackCost,
+        fallbackPredictCost,
         typeof orFallbackCost === 'number' && orFallbackCost > 0 ? orFallbackCost : 0,
+        fallbackUsage.cache_read_input_tokens ?? 0,
+        fallbackUsage.cache_creation_input_tokens ?? 0,
       )
     }
   }
