@@ -1,11 +1,17 @@
 // Load .env file — Bun dev reads it automatically, but compiled binary does not.
-// This ensures OPENROUTER_API_KEY, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID etc.
-// are available in both `bun run dev` and the built binary.
+// Search order: CWD first, then $HOME (so `claude-or` works from any directory).
 try {
   const fs = require('fs') as typeof import('fs')
   const path = require('path') as typeof import('path')
-  const envPath = path.resolve(process.cwd(), '.env')
-  const envText = fs.readFileSync(envPath, 'utf-8')
+  const candidates = [
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(process.env.HOME || '', 'claude-code-or', '.env'),
+    path.resolve(process.env.HOME || '', '.env'),
+  ]
+  let envText = ''
+  for (const p of candidates) {
+    try { envText = fs.readFileSync(p, 'utf-8'); break } catch {}
+  }
   for (const line of envText.split('\n')) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) continue
