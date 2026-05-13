@@ -1,3 +1,22 @@
+// Load .env file — Bun dev reads it automatically, but compiled binary does not.
+// This ensures OPENROUTER_API_KEY, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID etc.
+// are available in both `bun run dev` and the built binary.
+try {
+  const fs = require('fs') as typeof import('fs')
+  const path = require('path') as typeof import('path')
+  const envPath = path.resolve(process.cwd(), '.env')
+  const envText = fs.readFileSync(envPath, 'utf-8')
+  for (const line of envText.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eqIndex = trimmed.indexOf('=')
+    if (eqIndex === -1) continue
+    const key = trimmed.slice(0, eqIndex).trim()
+    const val = trimmed.slice(eqIndex + 1).trim().replace(/^["']|["']$/g, '')
+    if (!(key in process.env)) process.env[key] = val
+  }
+} catch {}
+
 // Runtime polyfill for bun:bundle (build-time macros)
 const feature = (name: string) => {
     if (name === 'BUDDY') return true;

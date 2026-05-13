@@ -14,10 +14,20 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
    curl -fsSL https://bun.com/install | bash
    bun install
    ```
-3. **Configure API Key**:
+3. **Configure Environment**:
    ```bash
-   export OPENROUTER_API_KEY="your_openrouter_key_here"
+   cp .env.example .env
+   # Edit .env and fill in your keys
    ```
+   Required:
+   - `OPENROUTER_API_KEY` — your [OpenRouter](https://openrouter.ai/) API key
+
+   Optional (for Discord bridge):
+   - `DISCORD_BOT_TOKEN` — from [Discord Developer Portal](https://discord.com/developers/applications) → New Application → Bot → Copy Token
+   - `DISCORD_GUILD_ID` — Discord Settings → Advanced → Developer Mode → right-click server icon → Copy Server ID
+   - Bot Permissions needed: Send Messages, Read Message History, Add Reactions, View Channels
+
+   > You can also set these via `export` — env vars take priority over `.env`.
 4. **Build & Run**:
    ```bash
    bun run build
@@ -26,15 +36,7 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
    # Run
    claude-or
    ```
-5. **Discord Bridge** (optional — control Claude Code from your phone):
-   ```bash
-   export DISCORD_BOT_TOKEN="your_discord_bot_token"
-   export DISCORD_GUILD_ID="your_discord_server_id"
-   ```
-   - **Bot Token**: [Discord Developer Portal](https://discord.com/developers/applications) → New Application → Bot → Copy Token
-   - **Guild ID**: Discord Settings → Advanced → Developer Mode → right-click server icon → Copy Server ID
-   - **Bot Permissions**: Send Messages, Read Message History, Add Reactions, View Channels
-   - In the REPL, type `/discord` to connect. Each call creates a new channel with synced history.
+5. **Discord Bridge** — In the REPL, type `/discord` to connect. Each call creates a new channel with synced history.
 
 ---
 
