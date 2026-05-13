@@ -30,11 +30,11 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
    > You can also set these via `export` — env vars take priority over `.env`.
 4. **Build & Run**:
    ```bash
-   bun run build
-   # Optional: install to system binary folder
-   sudo mv claude-or /usr/local/bin/claude-or
-   # Run
-   claude-or
+      bun run build
+      # Optional: install to system binary folder
+      sudo mv dist/claude-or /usr/local/bin/claude-or
+      # Run
+      claude-or
    ```
 5. **Discord Bridge** — In the REPL, type `/discord` to connect. Each call creates a new channel with synced history.
 
