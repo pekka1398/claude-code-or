@@ -134,6 +134,10 @@ import {
   setLastRequestUsage,
 } from 'src/bootstrap/state.js'
 import { computePredictedCost } from 'src/utils/cacheAwareConfig.js'
+import { appendFile } from 'fs/promises'
+import { join } from 'path'
+import { getClaudeConfigHomeDir } from 'src/utils/envUtils.js'
+import { isEnvTruthy } from 'src/utils/envUtils.js'
 import {
   AFK_MODE_BETA_HEADER,
   CONTEXT_1M_BETA_HEADER,
@@ -263,6 +267,27 @@ import {
 } from './withRetry.js'
 
 // Define a type that represents valid JSON values
+
+/** Append a token/cost summary line to openrouter_api.log for easy querying */
+function appendTokenCostLog(opts: {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  cacheRead: number
+  cacheWrite: number
+  predictCost: number
+  orCost: number
+}): void {
+  if (!process.env.OPENROUTER_API_KEY || isEnvTruthy(process.env.DISABLE_OPENROUTER_LOG)) return
+  const newTokens = Math.max(opts.inputTokens - opts.cacheRead - opts.cacheWrite, 0)
+  const fmt = (n: number) => n >= 1_000_000 ? (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+    : n >= 1_000 ? (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k'
+    : String(n)
+  const fmtCost = (c: number) => c === 0 ? '$0' : `$${c.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}`
+  const actual = opts.orCost > 0 ? fmtCost(opts.orCost) : fmtCost(opts.predictCost)
+  const line = `[${new Date().toISOString()}] in:${fmt(opts.inputTokens)}(R:${fmt(opts.cacheRead)}/W:${fmt(opts.cacheWrite)}/N:${fmt(newTokens)}) out:${fmt(opts.outputTokens)} ${actual}(P:${fmtCost(opts.predictCost)}) model:${opts.model}\n`
+  void appendFile(join(getClaudeConfigHomeDir(), 'openrouter_api.log'), line).catch(() => {})
+}
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray
 type JsonObject = { [key: string]: JsonValue }
 type JsonArray = JsonValue[]
@@ -2333,8 +2358,10 @@ async function* queryModel(
             }) ?? costUSDForPart
             if (typeof orCost === 'number' && orCost > 0) {
               setLastRequestUsage(lastInputTokens, usage.output_tokens, predictCost, orCost, lastCacheRead, lastCacheWrite)
+              appendTokenCostLog({ model: options.model, inputTokens: lastInputTokens, outputTokens: usage.output_tokens, cacheRead: lastCacheRead, cacheWrite: lastCacheWrite, predictCost, orCost })
             } else {
               setLastRequestUsage(lastInputTokens, usage.output_tokens, predictCost, 0, lastCacheRead, lastCacheWrite)
+              appendTokenCostLog({ model: options.model, inputTokens: lastInputTokens, outputTokens: usage.output_tokens, cacheRead: lastCacheRead, cacheWrite: lastCacheWrite, predictCost, orCost: 0 })
             }
 
             const refusalMessage = getErrorMessageIfRefusal(
@@ -2933,6 +2960,15 @@ async function* queryModel(
         fallbackUsage.cache_read_input_tokens ?? 0,
         fallbackUsage.cache_creation_input_tokens ?? 0,
       )
+      appendTokenCostLog({
+        model: options.model,
+        inputTokens: lastFallbackInput,
+        outputTokens: fallbackUsage.output_tokens,
+        cacheRead: fallbackUsage.cache_read_input_tokens ?? 0,
+        cacheWrite: fallbackUsage.cache_creation_input_tokens ?? 0,
+        predictCost: fallbackPredictCost,
+        orCost: typeof orFallbackCost === 'number' && orFallbackCost > 0 ? orFallbackCost : 0,
+      })
     }
   }
 
