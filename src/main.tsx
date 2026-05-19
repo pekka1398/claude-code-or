@@ -14,10 +14,10 @@ import { startMdmRawRead } from './utils/settings/mdm/rawRead.js';
 
 
 startMdmRawRead();
-import { ensureKeychainPrefetchCompleted, startKeychainPrefetch } from './utils/secureStorage/keychainPrefetch.js';
+// keychainPrefetch removed (OpenRouter, no macOS keychain needed)
 
 
-startKeychainPrefetch();
+// startKeychainPrefetch removed
 import { feature } from 'bun:bundle';
 import { Command as CommanderCommand, InvalidArgumentError, Option } from '@commander-js/extra-typings';
 import chalk from 'chalk';
@@ -743,7 +743,7 @@ async function run(): Promise<CommanderCommand> {
     // Must resolve before init() which triggers the first settings read
     // (applySafeConfigEnvironmentVariables → getSettingsForSource('policySettings')
     // → isRemoteManagedSettingsEligible → sync keychain reads otherwise ~65ms).
-    await Promise.all([ensureMdmSettingsLoaded(), ensureKeychainPrefetchCompleted()]);
+    await ensureMdmSettingsLoaded();
     profileCheckpoint('preAction_after_mdm');
     await init();
     profileCheckpoint('preAction_after_init');

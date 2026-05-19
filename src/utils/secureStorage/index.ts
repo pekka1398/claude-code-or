@@ -1,17 +1,29 @@
-import { createFallbackStorage } from './fallbackStorage.js'
-import { macOsKeychainStorage } from './macOsKeychainStorage.js'
-import { plainTextStorage } from './plainTextStorage.js'
-import type { SecureStorage } from './types.js'
-
 /**
- * Get the appropriate secure storage implementation for the current platform
+ * Stub secureStorage — minimal interface for plugin options.
+ * Real keychain storage is not needed for OpenRouter.
  */
-export function getSecureStorage(): SecureStorage {
-  if (process.platform === 'darwin') {
-    return createFallbackStorage(macOsKeychainStorage, plainTextStorage)
+
+export interface SecureStorageBackend {
+  name: string
+  read(): Record<string, unknown> | null
+  readAsync(): Promise<Record<string, unknown> | null>
+  update(data: Record<string, unknown>): { success: boolean; warning?: string }
+}
+
+const memoryStorage = new Map<string, Record<string, unknown>>()
+
+export function getSecureStorage(): SecureStorageBackend {
+  return {
+    name: 'memory',
+    read(): Record<string, unknown> | null {
+      return memoryStorage.get('data') ?? null
+    },
+    async readAsync(): Promise<Record<string, unknown> | null> {
+      return this.read()
+    },
+    update(data: Record<string, unknown>): { success: boolean; warning?: string } {
+      memoryStorage.set('data', data)
+      return { success: true }
+    },
   }
-
-  // TODO: add libsecret support for Linux
-
-  return plainTextStorage
 }

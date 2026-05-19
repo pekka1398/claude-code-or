@@ -26,8 +26,7 @@ import ide from './commands/ide/index.js'
 import init from './commands/init.js'
 import initVerifiers from './commands/init-verifiers.js'
 import keybindings from './commands/keybindings/index.js'
-import login from './commands/login/index.js'
-import logout from './commands/logout/index.js'
+// login/logout removed (OpenRouter — no Anthropic auth needed)
 import installGitHubApp from './commands/install-github-app/index.js'
 import installSlackApp from './commands/install-slack-app/index.js'
 import breakCache from './commands/break-cache/index.js'
@@ -166,13 +165,7 @@ import exportCommand from './commands/export/index.js'
 import model from './commands/model/index.js'
 import tag from './commands/tag/index.js'
 import outputStyle from './commands/output-style/index.js'
-import remoteEnv from './commands/remote-env/index.js'
-import upgrade from './commands/upgrade/index.js'
-import {
-  extraUsage,
-  extraUsageNonInteractive,
-} from './commands/extra-usage/index.js'
-import rateLimitOptions from './commands/rate-limit-options/index.js'
+// remote-env, upgrade, extra-usage, rate-limit-options removed (subscription-dependent)
 import statusline from './commands/statusline.js'
 import effort from './commands/effort/index.js'
 import stats from './commands/stats/index.js'
@@ -281,7 +274,6 @@ const COMMANDS = memoize((): Command[] => [
   mobile,
   model,
   outputStyle,
-  remoteEnv,
   plugin,
   pr_comments,
   releaseNotes,
@@ -303,10 +295,6 @@ const COMMANDS = memoize((): Command[] => [
   rewind,
   securityReview,
   terminalSetup,
-  upgrade,
-  extraUsage,
-  extraUsageNonInteractive,
-  rateLimitOptions,
   usage,
   usageReport,
   ...(webCmd ? [webCmd] : []),
@@ -324,7 +312,6 @@ const COMMANDS = memoize((): Command[] => [
   hooks,
   exportCommand,
   sandboxToggle,
-  ...(!isUsing3PServices() ? [logout, login()] : []),
   passes,
   ...(peersCmd ? [peersCmd] : []),
   tasks,
