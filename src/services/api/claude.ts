@@ -331,6 +331,13 @@ export function getExtraBodyParams(model?: string, betaHeaders?: string[]): Json
     }
   }
 
+  // GPT-5.5: prefer OpenAI (native, best quality), Azure as fallback.
+  if (getAPIProvider() === 'openrouter' && model?.includes('gpt-5.5')) {
+    result.provider = {
+      order: ['OpenAI', 'Azure'],
+    }
+  }
+
   // Handle beta headers if provided
   if (betaHeaders && betaHeaders.length > 0) {
     if (result.anthropic_beta && Array.isArray(result.anthropic_beta)) {
@@ -582,7 +589,7 @@ export async function verifyApiKey(
 
           await anthropic.beta.messages.create({
             model,
-            max_tokens: 1,
+            max_tokens: 16,
             messages,
             temperature: 1,
             ...(betas.length > 0 && { betas }),
