@@ -516,6 +516,13 @@ export const FileReadTool = buildTool({
     }
 
     const ext = path.extname(file_path).toLowerCase().slice(1)
+
+    // Ignore pages parameter for non-PDF files — some models send pages: "" or
+    // pages: "1" for text files because the parameter exists in the schema.
+    if (pages && !isPDFExtension(ext)) {
+      pages = undefined
+    }
+
     // Use expandPath for consistent path normalization with FileEditTool/FileWriteTool
     // (especially handles whitespace trimming and Windows path separators)
     const fullFilePath = expandPath(file_path)
