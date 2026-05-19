@@ -4,6 +4,12 @@
 
 export type AwsAuthStatus = 'idle' | 'authenticating' | 'authenticated' | 'failed'
 
+export type AwsAuthStatusState = {
+  isAuthenticating: boolean
+  error: string | null
+  output: string[]
+}
+
 export class AwsAuthStatusManager {
   private static instance: AwsAuthStatusManager
 
@@ -12,6 +18,14 @@ export class AwsAuthStatusManager {
       AwsAuthStatusManager.instance = new AwsAuthStatusManager()
     }
     return AwsAuthStatusManager.instance
+  }
+
+  getStatus(): AwsAuthStatusState {
+    return { isAuthenticating: false, error: null, output: [] }
+  }
+
+  subscribe(_callback: (status: AwsAuthStatusState) => void): () => void {
+    return () => {}
   }
 
   startAuthentication(): void {}

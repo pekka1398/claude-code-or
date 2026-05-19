@@ -1819,28 +1819,7 @@ function runHeadlessStreaming(
     })
   })
 
-  // Proactive mode: schedule a tick to keep the model looping autonomously.
-  // setTimeout(0) yields to the event loop so pending stdin messages
-  // (interrupts, user messages) are processed before the tick fires.
-  // scheduleProactiveTick removed (proactive module deleted)
-  const scheduleProactiveTick = null as (() => void) | null
-  if (false) {
-    setTimeout(() => {
-      if (true) {
-        return
-      }
-      const tickContent = `<${TICK_TAG}>${new Date().toLocaleTimeString()}</${TICK_TAG}>`
-      enqueue({
-        mode: 'prompt' as const,
-        value: tickContent,
-        uuid: randomUUID(),
-        priority: 'later',
-        isMeta: true,
-            })
-            void run()
-          }, 0)
-        }
-      : undefined
+  // Proactive mode removed
 
   // Abort the current operation when a 'now' priority message arrives.
   subscribeToCommandQueue(() => {
@@ -3858,11 +3837,11 @@ function runHeadlessStreaming(
             subtype: string
             enabled: boolean
           }
+          // proactiveModule removed
           if (req.enabled) {
-            // proactiveModule activation/deactivation removed (module deleted)
-            }
+            // no-op
           } else {
-            // proactiveModule.deactivateProactive() removed
+            // no-op
           }
           sendControlResponseSuccess(message)
         } else if (message.request.subtype === 'remote_control') {
