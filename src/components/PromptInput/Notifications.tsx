@@ -5,12 +5,10 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { type Notification, useNotifications } from 'src/context/notifications.js';
 import { logEvent } from 'src/services/analytics/index.js';
 import { useAppState } from 'src/state/AppState.js';
-import { useVoiceState } from '../../context/voice.js';
 import type { VerificationStatus } from '../../hooks/useApiKeyVerification.js';
 import { useIdeConnectionStatus } from '../../hooks/useIdeConnectionStatus.js';
 import type { IDESelection } from '../../hooks/useIdeSelection.js';
 import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
-import { useVoiceEnabled } from '../../hooks/useVoiceEnabled.js';
 import { Box, Text } from '../../ink.js';
 import { useClaudeAiLimits } from '../../services/claudeAiLimitsHook.js';
 import { calculateTokenWarningState } from '../../services/compact/autoCompact.js';
@@ -32,10 +30,6 @@ import { MemoryUsageIndicator } from '../MemoryUsageIndicator.js';
 import { SentryErrorBoundary } from '../SentryErrorBoundary.js';
 import { TokenWarning } from '../TokenWarning.js';
 import { SandboxPromptFooterHint } from './SandboxPromptFooterHint.js';
-
-/* eslint-disable @typescript-eslint/no-require-imports */
-const VoiceIndicator: typeof import('./VoiceIndicator.js').VoiceIndicator = (true /* forced */) ? require('./VoiceIndicator.js').VoiceIndicator : () => null;
-/* eslint-enable @typescript-eslint/no-require-imports */
 
 export const FOOTER_TEMPORARY_STATUS_TIMEOUT = 5000;
 type Props = {
@@ -265,24 +259,10 @@ function NotificationContent({
     return () => clearInterval(interval);
   }, []);
 
-  // Voice state (VOICE_MODE builds only, runtime-gated by GrowthBook)
-  const voiceState = (true /* forced */) ?
-  
-  useVoiceState(s => s.voiceState) : 'idle' as const;
-  
-  const voiceEnabled = (true /* forced */) ? useVoiceEnabled() : false;
-  const voiceError = (true /* forced */) ?
-  
-  useVoiceState(s_0 => s_0.voiceError) : null;
   const isBriefOnly = feature('KAIROS') || feature('KAIROS_BRIEF') ?
   
   useAppState(s_1 => s_1.isBriefOnly) : false;
 
-  // When voice is actively recording or processing, replace all
-  // notifications with just the voice indicator.
-  if ((true /* forced */) && voiceEnabled && (voiceState === 'recording' || voiceState === 'processing')) {
-    return <VoiceIndicator voiceState={voiceState} />;
-  }
   return <>
       <IdeStatusIndicator ideSelection={ideSelection} mcpClients={mcpClients} />
       {notifications.current && ('jsx' in notifications.current ? <Text wrap="truncate" key={notifications.current.key}>
@@ -320,11 +300,6 @@ function NotificationContent({
         </Box>}
       {!isBriefOnly && <TokenWarning tokenUsage={tokenUsage} model={mainLoopModel} />}
       {shouldShowAutoUpdater && <AutoUpdaterWrapper verbose={verbose} onAutoUpdaterResult={onAutoUpdaterResult} autoUpdaterResult={autoUpdaterResult} isUpdating={isAutoUpdating} onChangeIsUpdating={onChangeIsUpdating} showSuccessMessage={!isShowingCompactMessage} />}
-      {(true /* forced */) ? voiceEnabled && voiceError && <Box>
-              <Text color="error" wrap="truncate">
-                {voiceError}
-              </Text>
-            </Box> : null}
       <MemoryUsageIndicator />
       <SandboxPromptFooterHint />
     </>;

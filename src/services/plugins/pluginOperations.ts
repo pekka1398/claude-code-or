@@ -13,7 +13,6 @@
  */
 import { dirname, join } from 'path'
 import { getOriginalCwd } from '../../bootstrap/state.js'
-import { isBuiltinPluginId } from '../../plugins/builtinPlugins.js'
 import type { LoadedPlugin, PluginManifest } from '../../types/plugin.js'
 import { isENOENT, toError } from '../../utils/errors.js'
 import { getFsImplementation } from '../../utils/fsOperations.js'
@@ -577,32 +576,6 @@ export async function setPluginEnabledOp(
   scope?: InstallableScope,
 ): Promise<PluginOperationResult> {
   const operation = enabled ? 'enable' : 'disable'
-
-  // Built-in plugins: always use user-scope settings, bypass the normal
-  // scope-resolution + installed_plugins lookup (they're not installed).
-  if (isBuiltinPluginId(plugin)) {
-    const { error } = updateSettingsForSource('userSettings', {
-      enabledPlugins: {
-        ...getSettingsForSource('userSettings')?.enabledPlugins,
-        [plugin]: enabled,
-      },
-    })
-    if (error) {
-      return {
-        success: false,
-        message: `Failed to ${operation} built-in plugin: ${error.message}`,
-      }
-    }
-    clearAllCaches()
-    const { name: pluginName } = parsePluginIdentifier(plugin)
-    return {
-      success: true,
-      message: `Successfully ${operation}d built-in plugin: ${pluginName}`,
-      pluginId: plugin,
-      pluginName,
-      scope: 'user',
-    }
-  }
 
   if (scope) {
     assertInstallableScope(scope)

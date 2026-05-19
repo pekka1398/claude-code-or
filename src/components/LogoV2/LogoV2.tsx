@@ -23,7 +23,6 @@ import { getDumpPromptsPath } from 'src/services/api/dumpPrompts.js';
 import { isEnvTruthy } from 'src/utils/envUtils.js';
 import { getStartupPerfLogPath, isDetailedProfilingEnabled } from 'src/utils/startupProfiler.js';
 import { EmergencyTip } from './EmergencyTip.js';
-import { VoiceModeNotice } from './VoiceModeNotice.js';
 import { Opus1mMergeNotice } from './Opus1mMergeNotice.js';
 import { feature } from 'bun:bundle';
 
@@ -186,8 +185,7 @@ export function LogoV2() {
     let t17;
     if ($[15] === Symbol.for("react.memo_cache_sentinel")) {
       t11 = <CondensedLogo />;
-      t12 = <VoiceModeNotice />;
-      t13 = <Opus1mMergeNotice />;
+      t12 = <Opus1mMergeNotice />;
       t14 = ChannelsNoticeModule && <ChannelsNoticeModule.ChannelsNotice />;
       t15 = isDebugMode() && <Box paddingLeft={2} flexDirection="column"><Text color="warning">Debug mode enabled</Text><Text dimColor={true}>Logging to: {isDebugToStdErr() ? "stderr" : getDebugLogPath()}</Text></Box>;
       t16 = <EmergencyTip />;
@@ -296,8 +294,7 @@ export function LogoV2() {
     let t15;
     let t16;
     if ($[37] === Symbol.for("react.memo_cache_sentinel")) {
-      t14 = <VoiceModeNotice />;
-      t15 = <Opus1mMergeNotice />;
+      t14 = <Opus1mMergeNotice />;
       t16 = ChannelsNoticeModule && <ChannelsNoticeModule.ChannelsNotice />;
       $[37] = t14;
       $[38] = t15;
@@ -457,8 +454,7 @@ export function LogoV2() {
   let t33;
   let t34;
   if ($[75] === Symbol.for("react.memo_cache_sentinel")) {
-    t29 = <VoiceModeNotice />;
-    t30 = <Opus1mMergeNotice />;
+    t29 = <Opus1mMergeNotice />;
     t31 = ChannelsNoticeModule && <ChannelsNoticeModule.ChannelsNotice />;
     t32 = isDebugMode() && <Box paddingLeft={2} flexDirection="column"><Text color="warning">Debug mode enabled</Text><Text dimColor={true}>Logging to: {isDebugToStdErr() ? "stderr" : getDebugLogPath()}</Text></Box>;
     t33 = <EmergencyTip />;

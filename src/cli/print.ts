@@ -355,13 +355,8 @@ import { isExtractModeActive } from '../memdir/paths.js'
 
 // Dead code elimination: conditional imports
 /* eslint-disable @typescript-eslint/no-require-imports */
-const coordinatorModeModule = feature('COORDINATOR_MODE')
-  ? (require('../coordinator/coordinatorMode.js') as typeof import('../coordinator/coordinatorMode.js'))
-  : null
-const proactiveModule =
-  feature('PROACTIVE') || feature('KAIROS')
-    ? (require('../proactive/index.js') as typeof import('../proactive/index.js'))
-    : null
+// Coordinator module removed
+// Proactive module removed
 const cronSchedulerModule = feature('AGENT_TRIGGERS')
   ? (require('../utils/cronScheduler.js') as typeof import('../utils/cronScheduler.js'))
   : null
@@ -535,14 +530,7 @@ export async function runHeadless(
   // SleepTool passes isEnabled() filtering. This fallback covers the case
   // where CLAUDE_CODE_PROACTIVE is set but main.tsx's check didn't fire
   // (e.g. env was injected by the SDK transport after argv parsing).
-  if (
-    (feature('PROACTIVE') || feature('KAIROS')) &&
-    proactiveModule &&
-    !proactiveModule.isProactiveActive() &&
-    isEnvTruthy(process.env.CLAUDE_CODE_PROACTIVE)
-  ) {
-    proactiveModule.activateProactive('command')
-  }
+  // proactiveModule activation removed (module deleted)
 
   // Periodically force a full GC to keep memory usage in check
   if (typeof Bun !== 'undefined') {
@@ -1834,24 +1822,20 @@ function runHeadlessStreaming(
   // Proactive mode: schedule a tick to keep the model looping autonomously.
   // setTimeout(0) yields to the event loop so pending stdin messages
   // (interrupts, user messages) are processed before the tick fires.
-  const scheduleProactiveTick =
-    feature('PROACTIVE') || feature('KAIROS')
-      ? () => {
-          setTimeout(() => {
-            if (
-              !proactiveModule?.isProactiveActive() ||
-              proactiveModule.isProactivePaused() ||
-              inputClosed
-            ) {
-              return
-            }
-            const tickContent = `<${TICK_TAG}>${new Date().toLocaleTimeString()}</${TICK_TAG}>`
-            enqueue({
-              mode: 'prompt' as const,
-              value: tickContent,
-              uuid: randomUUID(),
-              priority: 'later',
-              isMeta: true,
+  // scheduleProactiveTick removed (proactive module deleted)
+  const scheduleProactiveTick = null as (() => void) | null
+  if (false) {
+    setTimeout(() => {
+      if (true) {
+        return
+      }
+      const tickContent = `<${TICK_TAG}>${new Date().toLocaleTimeString()}</${TICK_TAG}>`
+      enqueue({
+        mode: 'prompt' as const,
+        value: tickContent,
+        uuid: randomUUID(),
+        priority: 'later',
+        isMeta: true,
             })
             void run()
           }, 0)
@@ -2476,17 +2460,7 @@ function runHeadlessStreaming(
       idleTimeout.start()
     }
 
-    // Proactive tick: if proactive is active and queue is empty, inject a tick
-    if (
-      (feature('PROACTIVE') || feature('KAIROS')) &&
-      proactiveModule?.isProactiveActive() &&
-      !proactiveModule.isProactivePaused()
-    ) {
-      if (peek(isMainThread) === undefined && !inputClosed) {
-        scheduleProactiveTick!()
-        return
-      }
-    }
+    // Proactive tick injection removed (module deleted)
 
     // Re-check the queue after releasing the mutex. A message may have
     // arrived (and called run()) between the last dequeue() returning
@@ -3885,12 +3859,10 @@ function runHeadlessStreaming(
             enabled: boolean
           }
           if (req.enabled) {
-            if (!proactiveModule!.isProactiveActive()) {
-              proactiveModule!.activateProactive('command')
-              scheduleProactiveTick!()
+            // proactiveModule activation/deactivation removed (module deleted)
             }
           } else {
-            proactiveModule!.deactivateProactive()
+            // proactiveModule.deactivateProactive() removed
           }
           sendControlResponseSuccess(message)
         } else if (message.request.subtype === 'remote_control') {
@@ -4922,10 +4894,10 @@ async function loadInitialMessages(
       )
       if (result) {
         // Match coordinator mode to the resumed session's mode
-        if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
-          const warning = coordinatorModeModule.matchSessionMode(result.mode)
-          if (warning) {
-            process.stderr.write(warning + '\n')
+        // Coordinator mode matching removed (module deleted)
+        if (false) {
+          if (false) {
+            process.stderr.write('' + '\n')
             // Refresh agent definitions to reflect the mode switch
             const {
               getAgentDefinitionsWithOverrides,
@@ -4970,14 +4942,7 @@ async function loadInitialMessages(
             : result,
         )
 
-        // Write mode entry for the resumed session
-        if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
-          saveMode(
-            coordinatorModeModule.isCoordinatorMode()
-              ? 'coordinator'
-              : 'normal',
-          )
-        }
+        // Coordinator mode saveMode removed (module deleted)
 
         return {
           messages: result.messages,
@@ -5127,10 +5092,10 @@ async function loadInitialMessages(
       }
 
       // Match coordinator mode to the resumed session's mode
-      if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
-        const warning = coordinatorModeModule.matchSessionMode(result.mode)
-        if (warning) {
-          process.stderr.write(warning + '\n')
+      // Coordinator mode matching removed (module deleted)
+      if (false) {
+        if (false) {
+          process.stderr.write('' + '\n')
           // Refresh agent definitions to reflect the mode switch
           const { getAgentDefinitionsWithOverrides, getActiveAgentsFromList } =
             
@@ -5171,11 +5136,7 @@ async function loadInitialMessages(
       )
 
       // Write mode entry for the resumed session
-      if (feature('COORDINATOR_MODE') && coordinatorModeModule) {
-        saveMode(
-          coordinatorModeModule.isCoordinatorMode() ? 'coordinator' : 'normal',
-        )
-      }
+      // Coordinator mode saveMode removed (module deleted)
 
       return {
         messages: result.messages,

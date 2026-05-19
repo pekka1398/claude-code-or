@@ -56,7 +56,6 @@ import bughunter from './commands/bughunter/index.js'
 import terminalSetup from './commands/terminalSetup/index.js'
 import usage from './commands/usage/index.js'
 import theme from './commands/theme/index.js'
-import vim from './commands/vim/index.js'
 import { feature } from 'bun:bundle'
 // Dead code elimination: conditional imports
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -78,9 +77,6 @@ const remoteControlServerCommand =
   feature('DAEMON') && feature('BRIDGE_MODE')
     ? require('./commands/remoteControlServer/index.js').default
     : null
-const voiceCommand = (true /* forced */)
-  ? require('./commands/voice/index.js').default
-  : null
 const forceSnip = feature('HISTORY_SNIP')
   ? require('./commands/force-snip.js').default
   : null
@@ -114,11 +110,6 @@ const peersCmd = feature('UDS_INBOX')
 const forkCmd = feature('FORK_SUBAGENT')
   ? (
     require('./commands/fork/index.js') as typeof import('./commands/fork/index.js')
-  ).default
-  : null
-const buddy = true
-  ? (
-    require('./commands/buddy/index.js') as typeof import('./commands/buddy/index.js')
   ).default
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
@@ -160,7 +151,6 @@ import {
   getDynamicSkills,
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
-import { getBuiltinPluginSkillCommands } from './plugins/builtinPlugins.js'
 import {
   getPluginCommands,
   clearPluginCommandCache,
@@ -319,16 +309,13 @@ const COMMANDS = memoize((): Command[] => [
   rateLimitOptions,
   usage,
   usageReport,
-  vim,
   ...(webCmd ? [webCmd] : []),
   ...(forkCmd ? [forkCmd] : []),
-  ...(buddy ? [buddy] : []),
   ...(proactive ? [proactive] : []),
   ...(briefCommand ? [briefCommand] : []),
   ...(assistantCommand ? [assistantCommand] : []),
   ...(bridge ? [bridge] : []),
   ...(remoteControlServerCommand ? [remoteControlServerCommand] : []),
-  ...(voiceCommand ? [voiceCommand] : []),
   thinkback,
   thinkbackPlay,
   permissions,
@@ -357,7 +344,6 @@ async function getSkills(cwd: string): Promise<{
   skillDirCommands: Command[]
   pluginSkills: Command[]
   bundledSkills: Command[]
-  builtinPluginSkills: Command[]
 }> {
   try {
     const [skillDirCommands, pluginSkills] = await Promise.all([
@@ -376,16 +362,13 @@ async function getSkills(cwd: string): Promise<{
     ])
     // Bundled skills are registered synchronously at startup
     const bundledSkills = getBundledSkills()
-    // Built-in plugin skills come from enabled built-in plugins
-    const builtinPluginSkills = getBuiltinPluginSkillCommands()
     logForDebugging(
-      `getSkills returning: ${skillDirCommands.length} skill dir commands, ${pluginSkills.length} plugin skills, ${bundledSkills.length} bundled skills, ${builtinPluginSkills.length} builtin plugin skills`,
+      `getSkills returning: ${skillDirCommands.length} skill dir commands, ${pluginSkills.length} plugin skills, ${bundledSkills.length} bundled skills`,
     )
     return {
       skillDirCommands,
       pluginSkills,
       bundledSkills,
-      builtinPluginSkills,
     }
   } catch (err) {
     // This should never happen since we catch at the Promise level, but defensive
@@ -395,7 +378,6 @@ async function getSkills(cwd: string): Promise<{
       skillDirCommands: [],
       pluginSkills: [],
       bundledSkills: [],
-      builtinPluginSkills: [],
     }
   }
 }
@@ -451,7 +433,7 @@ export function meetsAvailabilityRequirement(cmd: Command): boolean {
  */
 const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
   const [
-    { skillDirCommands, pluginSkills, bundledSkills, builtinPluginSkills },
+    { skillDirCommands, pluginSkills, bundledSkills },
     pluginCommands,
     workflowCommands,
   ] = await Promise.all([
@@ -462,7 +444,6 @@ const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
 
   return [
     ...bundledSkills,
-    ...builtinPluginSkills,
     ...skillDirCommands,
     ...workflowCommands,
     ...pluginCommands,
@@ -626,7 +607,6 @@ export const REMOTE_SAFE_COMMANDS: Set<Command> = new Set([
   help, // Show help
   theme, // Change terminal theme
   color, // Change agent color
-  vim, // Toggle vim mode
   cost, // Show session cost (local cost tracking)
   usage, // Show usage info
   copy, // Copy last message

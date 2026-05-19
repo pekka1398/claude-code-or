@@ -47,10 +47,6 @@ import {
 import memoize from 'lodash-es/memoize.js'
 import { basename, dirname, join, relative, resolve, sep } from 'path'
 import { getInlinePlugins } from '../../bootstrap/state.js'
-import {
-  BUILTIN_MARKETPLACE_NAME,
-  getBuiltinPlugins,
-} from '../../plugins/builtinPlugins.js'
 import type {
   LoadedPlugin,
   PluginComponent,
@@ -1908,9 +1904,9 @@ async function loadPluginsFromMarketplaces({
       // Check if it's in plugin@marketplace format (includes both enabled and disabled)
       const isValidFormat = PluginIdSchema().safeParse(key).success
       if (!isValidFormat || value === undefined) return false
-      // Skip built-in plugins — handled separately by getBuiltinPlugins()
+      // Skip built-in plugins — they are no longer supported
       const { marketplace } = parsePluginIdentifier(key)
-      return marketplace !== BUILTIN_MARKETPLACE_NAME
+      return marketplace !== 'builtin'
     },
   )
 
@@ -3168,8 +3164,6 @@ async function assemblePluginLoadResult(
       ? loadSessionOnlyPlugins(inlinePlugins)
       : Promise.resolve({ plugins: [], errors: [] }),
   ])
-  // 3. Load built-in plugins that ship with the CLI
-  const builtinResult = getBuiltinPlugins()
 
   // Session plugins (--plugin-dir) override installed ones by name,
   // UNLESS the installed plugin is locked by managed settings
@@ -3177,7 +3171,7 @@ async function assemblePluginLoadResult(
   const { plugins: allPlugins, errors: mergeErrors } = mergePluginSources({
     session: sessionResult.plugins,
     marketplace: marketplaceResult.plugins,
-    builtin: [...builtinResult.enabled, ...builtinResult.disabled],
+    builtin: [],
     managedNames: getManagedPluginNames(),
   })
   const allErrors = [

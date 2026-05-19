@@ -17,7 +17,6 @@ import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 
 import { Box, Text, useInput, useTerminalFocus } from '../../ink.js';
 import { useKeybinding, useKeybindings } from '../../keybindings/useKeybinding.js';
-import { getBuiltinPluginDefinition } from '../../plugins/builtinPlugins.js';
 import { useMcpToggleEnabled } from '../../services/mcp/MCPConnectionManager.js';
 import type { MCPServerConnection, McpClaudeAIProxyServerConfig, McpHTTPServerConfig, McpSSEServerConfig, McpStdioServerConfig } from '../../services/mcp/types.js';
 import { filterToolsByServer } from '../../services/mcp/utils.js';
@@ -210,24 +209,9 @@ function PluginComponentsDisplay({
   useEffect(() => {
     async function loadComponents() {
       try {
-        // Built-in plugins don't have a marketplace entry — read from the
-        // registered definition directly.
+        // Built-in plugins are no longer supported
         if (marketplace === 'builtin') {
-          const builtinDef = getBuiltinPluginDefinition(plugin.name);
-          if (builtinDef) {
-            const skillNames = builtinDef.skills?.map(s => s.name) ?? [];
-            const hookEvents = builtinDef.hooks ? Object.keys(builtinDef.hooks) : [];
-            const mcpServerNames = builtinDef.mcpServers ? Object.keys(builtinDef.mcpServers) : [];
-            setComponents({
-              commands: null,
-              agents: null,
-              skills: skillNames.length > 0 ? skillNames : null,
-              hooks: hookEvents.length > 0 ? hookEvents : null,
-              mcpServers: mcpServerNames.length > 0 ? mcpServerNames : null
-            });
-          } else {
-            setError(`Built-in plugin ${plugin.name} not found`);
-          }
+          setError(`Built-in plugins are no longer supported`);
           setLoading(false);
           return;
         }
