@@ -1,3 +1,123 @@
+# CLAUDE.md
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+This is a **reverse-engineered / decompiled** version of Anthropic's official Claude Code CLI tool. The goal is to restore core functionality while trimming secondary capabilities. Many modules are stubbed or feature-flagged off. The codebase has ~1341 tsc errors from decompilation (mostly `unknown`/`never`/`{}` types) — these do **not** block Bun runtime execution.
+
+## Commands
+
+```bash
+# Install dependencies
+bun install
+
+# Dev mode (direct execution via Bun)
+bun run dev
+# equivalent to: bun run src/entrypoints/cli.tsx
+
+# Pipe mode
+echo "say hello" | bun run src/entrypoints/cli.tsx -p
+
+# Build (outputs dist/cli.js, ~25MB)
+bun run build
+```
+
+No test runner is configured. No linter is configured.
+
+## Architecture
+
+### Runtime & Build
+
+- **Runtime**: Bun (not Node.js). All imports, builds, and execution use Bun APIs.
+- **Build**: `bun build src/entrypoints/cli.tsx --outdir dist --target bun` — single-file bundle.
+- **Module system**: ESM (`"type": "module"`), TSX with `react-jsx` transform.
+- **Monorepo**: Bun workspaces — internal packages live in `packages/` resolved via `workspace:*`.
+
+### Entry & Bootstrap
+
+1. **`src/entrypoints/cli.tsx`** — True entrypoint. Injects runtime polyfills at the top:
+   - `feature()` always returns `false` (all feature flags disabled, skipping unimplemented branches).
+   - `globalThis.MACRO` — simulates build-time macro injection (VERSION, BUILD_TIME, etc.).
+   - `BUILD_TARGET`, `BUILD_ENV`, `INTERFACE_TYPE` globals.
+2. **`src/main.tsx`** — Commander.js CLI definition. Parses args, initializes services (auth, analytics, policy), then launches the REPL or runs in pipe mode.
+3. **`src/entrypoints/init.ts`** — One-time initialization (telemetry, config, trust dialog).
+
+### Core Loop
+
+- **`src/query.ts`** — The main API query function. Sends messages to Claude API, handles streaming responses, processes tool calls, and manages the conversation turn loop.
+- **`src/QueryEngine.ts`** — Higher-level orchestrator wrapping `query()`. Manages conversation state, compaction, file history snapshots, attribution, and turn-level bookkeeping. Used by the REPL screen.
+- **`src/screens/REPL.tsx`** — The interactive REPL screen (React/Ink component). Handles user input, message display, tool permission prompts, and keyboard shortcuts.
+
+### API Layer
+
+- **`src/services/api/claude.ts`** — Core API client. Builds request params (system prompt, messages, tools, betas), calls the Anthropic SDK streaming endpoint, and processes `BetaRawMessageStreamEvent` events.
+- Supports multiple providers: Anthropic direct, AWS Bedrock, Google Vertex, Azure.
+- Provider selection in `src/utils/model/providers.ts`.
+
+### Tool System
+
+- **`src/Tool.ts`** — Tool interface definition (`Tool` type) and utilities (`findToolByName`, `toolMatchesName`).
+- **`src/tools.ts`** — Tool registry. Assembles the tool list; some tools are conditionally loaded via `feature()` flags or `process.env.USER_TYPE`.
+- **`src/tools/<ToolName>/`** — Each tool in its own directory (e.g., `BashTool`, `FileEditTool`, `GrepTool`, `AgentTool`).
+- Tools define: `name`, `description`, `inputSchema` (JSON Schema), `call()` (execution), and optionally a React component for rendering results.
+
+### UI Layer (Ink)
+
+- **`src/ink.ts`** — Ink render wrapper with ThemeProvider injection.
+- **`src/ink/`** — Custom Ink framework (forked/internal): custom reconciler, hooks (`useInput`, `useTerminalSize`, `useSearchHighlight`), virtual list rendering.
+- **`src/components/`** — React components rendered in terminal via Ink. Key ones:
+  - `App.tsx` — Root provider (AppState, Stats, FpsMetrics).
+  - `Messages.tsx` / `MessageRow.tsx` — Conversation message rendering.
+  - `PromptInput/` — User input handling.
+  - `permissions/` — Tool permission approval UI.
+- Components use React Compiler runtime (`react/compiler-runtime`) — decompiled output has `_c()` memoization calls throughout.
+
+### State Management
+
+- **`src/state/AppState.tsx`** — Central app state type and context provider. Contains messages, tools, permissions, MCP connections, etc.
+- **`src/state/store.ts`** — Zustand-style store for AppState.
+- **`src/bootstrap/state.ts`** — Module-level singletons for session-global state (session ID, CWD, project root, token counts).
+
+### Context & System Prompt
+
+- **`src/context.ts`** — Builds system/user context for the API call (git status, date, CLAUDE.md contents, memory files).
+- **`src/utils/claudemd.ts`** — Discovers and loads CLAUDE.md files from project hierarchy.
+
+### Feature Flag System
+
+All `feature('FLAG_NAME')` calls come from `bun:bundle` (a build-time API). In this decompiled version, `feature()` is polyfilled to always return `false` in `cli.tsx`. This means all Anthropic-internal features (COORDINATOR_MODE, KAIROS, PROACTIVE, etc.) are disabled.
+
+### Stubbed/Deleted Modules
+
+| Module | Status |
+|--------|--------|
+| Computer Use (`@ant/*`) | Stub packages in `packages/@ant/` |
+| `*-napi` packages (audio, image, url, modifiers) | Stubs in `packages/` (except `color-diff-napi` which is fully implemented) |
+| Analytics / GrowthBook / Sentry | Empty implementations |
+| Magic Docs / Voice Mode / LSP Server | Removed |
+| Plugins / Marketplace | Removed |
+| MCP OAuth | Simplified |
+
+### Key Type Files
+
+- **`src/types/global.d.ts`** — Declares `MACRO`, `BUILD_TARGET`, `BUILD_ENV` and internal Anthropic-only identifiers.
+- **`src/types/internal-modules.d.ts`** — Type declarations for `bun:bundle`, `bun:ffi`, `@anthropic-ai/mcpb`.
+- **`src/types/message.ts`** — Message type hierarchy (UserMessage, AssistantMessage, SystemMessage, etc.).
+- **`src/types/permissions.ts`** — Permission mode and result types.
+
+## Working with This Codebase
+
+- **Don't try to fix all tsc errors** — they're from decompilation and don't affect runtime.
+- **`feature()` is always `false`** — any code behind a feature flag is dead code in this build.
+- **React Compiler output** — Components have decompiled memoization boilerplate (`const $ = _c(N)`). This is normal.
+- **`bun:bundle` import** — In `src/main.tsx` and other files, `import { feature } from 'bun:bundle'` works at build time. At dev-time, the polyfill in `cli.tsx` provides it.
+- **`src/` path alias** — tsconfig maps `src/*` to `./src/*`. Imports like `import { ... } from 'src/utils/...'` are valid.
+
+
+
+
 # ====0518=====
 ## 核心概念
 
@@ -190,6 +310,262 @@ fn main() {
 - 整個東西完全統一：檔案讀取、圖片、PDF、外部服務，全部都是 CLI 關鍵字
 
 
+# ====0519=====
+# 工作紀錄 — 模塊清理 & Auth 簡化
+
+日期：2026-05-19
+
+---
+
+## 1. 刪除模塊目錄
+
+### src/buddy/ (6 files, -1298 lines)
+- `CompanionSprite.tsx`, `companion.ts`, `prompt.ts`, `sprites.ts`, `types.ts`, `useBuddyNotification.tsx`
+- 原因：純裝飾性小精靈動畫
+
+### src/voice/ (1 file, -39 lines)
+- `voiceModeEnabled.ts`
+- 原因：語音模式已移除
+
+### src/daemon/ (2 files, -6 lines)
+- `main.ts`, `workerRegistry.ts`
+- 原因：全是 no-op stub，daemon-worker 分支在 cli.tsx 已刪
+
+### src/jobs/ (1 file, -3 lines)
+- `classifier.ts`
+- 原因：no-op stub，query.ts 的 import 已刪
+
+### src/ssh/ (2 files, -59 lines)
+- `createSSHSession.ts`, `SSHSessionManager.ts`
+- 原因：stub 直接 throw，SSH session 功能不使用
+
+### src/proactive/ (1 file, -6 lines)
+- `index.ts`
+- 原因：所有 export 返回 false/no-op，feature flag 永遠關閉
+
+### src/coordinator/ (2 files, -373 lines)
+- `coordinatorMode.ts`, `workerAgent.ts`
+- 原因：COORDINATOR_MODE feature flag 永遠 false
+
+### src/plugins/ (2 files, -182 lines)
+- `builtinPlugins.ts`, `bundled/index.ts`
+- 原因：registry 為空，initBuiltinPlugins 是 no-op
+- 注意：`utils/plugins/` 和 `services/plugins/` 保留，因為 plugin 系統核心還在使用
+
+### src/server/ (11 files, -404 lines)
+- `backends/dangerousBackend.ts`, `connectHeadless.ts`, `createDirectConnectSession.ts`, `directConnectManager.ts`, `lockfile.ts`, `parseConnectUrl.ts`, `server.ts`, `serverBanner.ts`, `serverLog.ts`, `sessionManager.ts`, `types.ts`
+- 原因：local server / direct connect / headless connect 不使用
+
+### src/vim/ (5 files, -1513 lines)
+- `motions.ts`, `operators.ts`, `textObjects.ts`, `transitions.ts`, `types.ts`
+- 原因：vim 模式移除
+
+### .github/
+- `workflows/ci.yml`
+- 原因：不跑 CI
+
+### .githooks/
+- `pre-commit`
+- 原因：未配置使用
+
+---
+
+## 2. 刪除命令目錄
+
+### src/commands/buddy/ (1 file, -38 lines)
+### src/commands/voice/ (2 files, -149 lines)
+### src/commands/login/ (2 files, -117 lines)
+- `index.ts`, `login.tsx`
+- 原因：OpenRouter 不需要 Anthropic OAuth login
+
+### src/commands/logout/ (2 files, -91 lines)
+- `index.ts`, `logout.tsx`
+- 原因：同上
+
+### src/commands/upgrade/ (2 files, -53 lines)
+- `index.ts`, `upgrade.tsx`
+- 原因：訂閱升級不適用
+
+### src/commands/extra-usage/ (4 files, -181 lines)
+- `extra-usage-core.ts`, `extra-usage-noninteractive.ts`, `extra-usage.tsx`, `index.ts`
+- 原因：訂閱超額付費不適用
+
+### src/commands/rate-limit-options/ (2 files, -228 lines)
+- `index.ts`, `rate-limit-options.tsx`
+- 原因：訂閱速率限制選項不適用
+
+### src/commands/remote-env/ (2 files, -21 lines)
+- `index.ts`, `remote-env.tsx`
+- 原因：遠端環境不使用
+
+---
+
+## 3. 刪除 hooks
+
+### src/hooks/useSSHSession.ts (-241 lines)
+### src/hooks/useVimInput.ts (-316 lines)
+### src/hooks/useDirectConnect.ts (-229 lines)
+
+---
+
+## 4. 刪除組件
+
+### src/components/VimTextInput.tsx (-139 lines)
+### src/components/LogoV2/VoiceModeNotice.tsx (-67 lines)
+
+---
+
+## 5. Auth 簡化
+
+### src/utils/auth.ts — 重寫 (2003 → ~200 lines)
+- 刪除：OAuth token 管理、訂閱檢查、AWS/GCP credential refresh、macOS Keychain、apiKeyHelper、lockfile 跨進程 token 刷新
+- 保留：`getAnthropicApiKey()` (讀 ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY)、`getAuthTokenSource()`、`getAnthropicApiKeyWithSource()`
+- 所有訂閱函數 stub：`isClaudeAISubscriber()` → false, `getSubscriptionType()` → null, `hasOpusAccess()` → true 等
+
+### src/services/oauth/ — 替換為 stub
+- `types.ts` — 保留 SubscriptionType, OAuthTokens 類型
+- `client.ts` — 所有函數返回 false/null/Promise.reject
+- `index.ts` — OAuthService.startOAuthFlow throws
+- `getOauthProfile.ts` — 返回 null
+- `auth-code-listener.ts` — 返回空 listener
+- `crypto.ts` — 空
+
+### src/components/ConsoleOAuthFlow.tsx — 替換為 stub
+- 顯示 "Set OPENROUTER_API_KEY in your .env file"
+
+### src/utils/authFileDescriptor.ts — 重寫為 stub
+- `getOAuthTokenFromFileDescriptor()` → null, `getApiKeyFromFileDescriptor()` → null
+
+### src/utils/authPortable.ts — 重寫為 stub
+- 保留 `normalizeApiKeyForConfig()` (仍被引用)
+
+### src/utils/aws.ts — 重寫為 stub
+- `checkStsCallerIdentity()`, `clearAwsIniCache()`, `isValidAwsStsOutput()`, `isAwsCredentialsProviderError()` → false/resolve
+
+### src/utils/awsAuthStatusManager.ts — 重寫為 stub
+- 保留 class interface，所有方法 no-op
+
+### src/utils/secureStorage/ — 重寫為 stub
+- `index.ts` — in-memory storage (plugin 系統仍需)
+- `macOsKeychainStorage.ts` — `isMacOsKeychainLocked()` → false
+- `macOsKeychainHelpers.ts` — stub
+- `keychainPrefetch.ts` — no-op
+- `fallbackStorage.ts`, `plainTextStorage.ts` — re-export index
+- 刪除 `src/constants/oauth.ts` 子目錄
+
+---
+
+## 6. 接口清理（修改的文件）
+
+### src/main.tsx
+- 刪 `import { ensureKeychainPrefetchCompleted, startKeychainPrefetch }` + 調用
+- 刪 `await ensureKeychainPrefetchCompleted()` → 只留 `await ensureMdmSettingsLoaded()`
+- 刪大量 daemon/ssh/server/coordinator/proactive/buddy/voice 相關分支和 import
+
+### src/commands.ts
+- 刪 `import login/logout/remoteEnv/upgrade/extraUsage/rateLimitOptions`
+- 刪命令陣列中的對應條目
+- 刪 `...(!isUsing3PServices() ? [logout, login()] : [])`
+
+### src/entrypoints/cli.tsx
+- 刪 daemon-worker 和 daemon 分支
+
+### src/screens/REPL.tsx
+- 刪 voice integration, vim mode, SSH session, direct connect, buddy 相關 props 和邏輯
+
+### src/QueryEngine.ts
+- 刪 coordinator conditional import (`feature('COORDINATOR_MODE')` block)
+
+### src/tools/AgentTool/AgentTool.tsx
+- 刪 `import { isCoordinatorMode }`, 替換 `isCoordinatorMode()` → `false`
+
+### src/tools/AgentTool/resumeAgent.ts
+- 同上
+
+### src/tools/AgentTool/forkSubagent.ts
+- 同上
+
+### src/components/tasks/BackgroundTasksDialog.tsx
+- 同上
+
+### src/cli/print.ts
+- 刪 coordinator/proactive conditional import 和使用
+
+### src/hooks/useVoiceEnabled.ts — 簡化
+### src/hooks/useCanUseTool.tsx — coordinatorHandler import 保留（檔案還在）
+
+### src/components/PromptInput/PromptInput.tsx — 刪 voice/vim 引用
+### src/components/PromptInput/PromptInputFooterLeftSide.tsx — 刪 buddy/proactive 引用
+### src/components/PromptInput/Notifications.tsx — 刪 buddy 引用
+### src/components/LogoV2/LogoV2.tsx — 刪 voice mode 引用
+### src/components/messages/RateLimitMessage.tsx — `extraUsage` import → null
+### src/components/Settings/Usage.tsx — `extraUsageCommand` import → null
+### src/state/AppStateStore.ts — 刪 buddy 相關 state
+### src/services/plugins/pluginOperations.ts — 刪 builtinPlugins import
+### src/utils/plugins/pluginLoader.ts — 刪 builtinPlugins import
+### src/utils/attachments.ts — 刪 voice 相關
+### src/utils/messages.ts — 刪 voice 相關
+### src/utils/config.ts — 刪 buddy 相關
+### src/tools/ConfigTool/prompt.ts — 刪 buddy 提示
+### src/types/global.d.ts — 刪 buddy/voice 類型
+### src/components/messages/nullRenderingAttachments.ts — 刪 buddy 引用
+
+---
+
+# 第二輪 — Model & 計費簡化
+
+## 7. modelCost.ts — 重寫（231 → ~160 lines）
+
+- 刪掉所有硬編碼 Anthropic 定價（COST_TIER_3_15, COST_TIER_15_75, COST_HAIKU_35 等）
+- 改從 `~/.claude-code-or/config.json` 讀定價，取最高優先級 provider 的 pricing
+- `getModelCosts()` 先查 config.json，找不到 fallback $5/$25 per Mtok
+- `getModelCostsFromConfig()` — 新函數，讀 config.json 返回 ModelCosts
+- 保留 `calculateUSDCost()`, `calculateCostFromTokens()` 接口不變
+- 原因：OpenRouter 的每個 model 定價不同，硬編碼只覆蓋 Anthropic 模型，非 Anthropic 模型全 fallback 到錯的價格
+
+## 8. billing.ts — 重寫（78 → ~20 lines）
+
+- `hasConsoleBillingAccess()` → 只要有 API key 就 return true（原本要檢查 org role / subscription）
+- `hasClaudeAiBillingAccess()` → 永遠 false
+- 原因：原本 OpenRouter 用戶永遠 false，導致 costHook 退出時的費用摘要被擋住不顯示
+
+## 9. /model 命令 — 簡化（src/commands/model/model.tsx, 297 → ~90 lines）
+
+- 刪掉 ModelPickerWrapper（彈出式選擇器 UI）
+- `/model <名字>` 直接設模型，`/model` 顯示當前模型
+- 不再做 1M context access check、extra usage billing check、fast mode toggle
+- 保留 `validateModel()` 驗證和 `isModelAllowed()` allowlist 檢查
+- 原因：OpenRouter 沒有訂閱分級，不需要選擇器，直接打名字就好
+
+---
+
+## 10. src/services/api/client.ts — 重寫（418 → ~200 lines）
+
+- 刪 Bedrock 客戶端路徑（`@anthropic-ai/bedrock-sdk`, AWS credential refresh）
+- 刪 Foundry 客戶端路徑（`@anthropic-ai/foundry-sdk`, Azure AD auth）
+- 刪 Vertex 客戶端路徑（`@anthropic-ai/vertex-sdk`, google-auth-library, GCP credential refresh）
+- 刪 `refreshAndGetAwsCredentials()`, `refreshGcpCredentialsIfNeeded()` import
+- 刪 `getAWSRegion()`, `getVertexRegionForModel()` import
+- 保留：直接 Anthropic / OpenRouter 客戶端、`configureApiKeyHeaders()`、`buildFetch()`（含 OpenRouter API logging）
+- 原因：只走 OpenRouter，不需要 AWS/GCP/Azure 客戶端
+
+## 11. src/utils/model/modelOptions.ts — 重寫（560 → ~230 lines）
+
+- 刪 5 個訂閱分支（ant / Max+TeamPremium / Pro+TeamStd+Enterprise / PAYG 1P / PAYG 3P）
+- 只保留 PAYG 3P 路徑
+- 刪 `isClaudeAISubscriber()`, `isMaxSubscriber()`, `isTeamPremiumSubscriber()` import
+- 刪 `checkOpus1mAccess()`, `checkSonnet1mAccess()`, `isOpus1mMergeEnabled()`, `getOpus46PricingSuffix()` 等
+- 新增：從 `~/.claude-code-or/config.json` 讀取可用模型列表和定價
+- `getModelOptions()` 自動把 config.json 裡的模型加入選項
+- 原因：OpenRouter 沒有訂閱分級，只需一條路徑
+
+---
+
+## 累計
+
+- 第一輪：111 files, +380 -11267
+- 第二輪：3 files, +197 -490
+- 第三輪：2 files, +107 -659
 
 
 
@@ -734,3 +1110,313 @@ claude-code也是很多冗長的工具 很麻煩
     ← 你自己的 AI-Shell 思路                                                                                                                                  
                                                                                                                                                               
   Codex = read-only reference                         
+
+
+
+
+
+
+
+
+
+
+
+
+
+關於ai shell
+  可行的分階段路線
+
+  Phase 1：dash + bash 相容層（~1,500 行 C）
+
+  只補最關鍵的，讓模型生成的 95% 命令能跑：
+
+  dash 補丁：
+  ├── builtin-source.c     (source → . 別名，20 行)
+  ├── builtin-shopt.c      (空操作，30 行)
+  ├── builtin-declare.c    (declare -f/-F 最小實現，100 行)
+  ├── var-BASHPID.c        ($BASHPID，10 行)
+  ├── var-RANDOM.c         ($RANDOM，10 行)
+  ├── parser-function.c    (function 關鍵字，50 行)
+  ├── parser-dbracket.c    ([[ ]] 轉譯，200 行)
+  ├── param-replace.c      (${var//pat/rep}，150 行)
+  ├── param-substr.c       (${var:off:len}，100 行)
+  ├── redir-herestring.c   (<<< 轉譯，80 行)
+  └── builtin-exec-a.c     (exec -a，60 行)
+
+  dash 原始碼 ~19,000 行，這些補丁加上去 ~21,000 行，很小。
+
+  Phase 2：AI-Shell 攔截層（~2,000 行 Rust）
+
+  包在 dash 外面，用 std::process::Command 執行，攔截輸入/輸出：
+
+  // 不改 dash，在外層包
+  fn execute(command: &str) -> Output {
+      // 1. Pre-flight: 安全檢查
+      if is_dangerous(command) {
+          return diagnostic_error(command);
+      }
+      // 2. Smart intercept: cat/sed/head → smart readfile
+      if let Some(smart_cmd) = try_intercept(command) {
+          return smart_cmd.execute();
+      }
+      // 3. Fallback: 交給 patched dash
+      let output = Command::new("ai-shell-dash")
+          .arg("-c").arg(command)
+          .output()?;
+      // 4. Post-process: strip ANSI, 結構化
+      strip_ansi(&output.stdout)
+  }
+
+  Phase 3：不補的東西
+
+  ┌─────────────┬──────────────────────────┬────────────────────────┐
+  │    不補     │           原因           │        替代方案        │
+  ├─────────────┼──────────────────────────┼────────────────────────┤
+  │ 陣列        │ 實現成本太高，AI         │ 報錯時建議用空格分隔字 │
+  │             │ 生成也少用               │ 串 + for x in $list    │
+  ├─────────────┼──────────────────────────┼────────────────────────┤
+  │ Process sub │ 管道語義不同，很難正確模 │ 報錯時建議用 tmp file  │
+  │ stitution   │ 擬                       │ 或 pipe                │
+  │ <()         │                          │                        │
+  ├─────────────┼──────────────────────────┼────────────────────────┤
+  │ 關聯陣列    │ 太複雜                   │ 同上                   │
+  └─────────────┴──────────────────────────┴────────────────────────┘
+
+  ---
+  回答你的問題
+
+  能不能在 dash 上補這些相容？ 可以。dash 的原始碼結構很清晰：
+
+  - parser.c — 加 function 關鍵字和 [[ ]] 解析
+  - expand.c — 加 ${var//pat/rep} 和 ${var:off:len}
+  - builtin.c — 加 source、shopt（空操作）、declare -f
+  - redir.c — 加 <<<
+  - var.c — 加 $BASHPID、$RANDOM
+
+  這些補丁都是局部修改，不需要重構 dash 的架構。而且 note.md 裡的
+  AI-Shell 外層攔截（ANSI 過濾、Cargo 報錯、cat 智慧化）完全不需要改
+  dash — 它們在 Rust 外層做，dash 只是執行引擎。
+
+  最乾淨的架構是：patched dash（~1,500 行補丁）+ Rust 外殼（~2,000 行）=
+   AI-Shell。
+
+✻ Crunched for 59s
+
+❯ 或是就乖乖用bash就好                                                  
+
+● 對，老實說 bash 是最務實的選擇。
+
+  原因很簡單：
+
+  1. bash 相容問題是零 — 你不需要補任何東西，模型生成的命令 99.9% 都能跑
+  2. AI-Shell 的價值不在 shell 本身 — note.md 裡真正有意義的增強（ANSI
+  過濾、Cargo 報錯、cat 攔截、安全預檢）全都在外層，跟用 bash 還是 dash
+  無關
+  3. bash 啟動慢的問題可以繞過 — Claude Code 的 ShellSnapshot
+  方案已經解決了：第一次做 snapshot，後續命令 source snapshot 而不是 -l
+  login shell
+
+  真正該花精力的架構是：
+
+  AI-Shell = bash（不動）+ Rust 外殼（核心價值在這）
+                │                    │
+                │                    ├── 輸入層：安全預檢、指令攔截
+                │                    ├── 執行層：fork bash -c，攔截
+  stdout/stderr
+                │                    └── 輸出層：strip ANSI、Cargo
+  報錯、--json 注入
+                │
+                └── 模型以為自己在用 bash，實際輸出被淨化了
+
+  dash 節省的啟動時間（~10ms vs ~100ms）對 AI 場景根本無感 —
+  模型推理一次要幾秒，shell 啟動多 90ms 完全不是瓶頸。
+
+  把精力放在 Rust 外殼的 2,000 行，別花在 dash 的 1,500 行補丁上。
+
+
+
+## codex
+codex位在/home/pekka/claude-code-or/reference-repo/codex 有需要的話可以參考
+
+
+## 精簡代碼 tooluse
+
+  實際啟用、模型可見的工具：26 個
+
+  ┌─────┬─────────────────────┬─────────────────────┐
+  │  #  │        工具         │      取代方案       │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 1   │ BashTool            │ 保留 → 未來的 shell │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 2   │ AgentTool           │ 保留 → spawn_agent  │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 3   │ TaskOutputTool      │ 保留 → wait_agent   │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 4   │ SendMessageTool     │ 保留                │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 5   │ FileReadTool        │ shell 攔截 cat/sed  │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 6   │ FileEditTool        │ apply_patch         │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 7   │ FileWriteTool       │ apply_patch         │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 8   │ GlobTool            │ shell 用 find/ls    │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 9   │ GrepTool            │ shell 用 grep       │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 10  │ WebFetchTool        │ shell 用 curl       │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 11  │ WebSearchTool       │ shell 用 curl       │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 12  │ NotebookEditTool    │ shell 用 jq         │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 13  │ TodoWriteTool       │ 模型寫檔案就好      │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 14  │ TaskCreateTool      │ 同上                │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 15  │ TaskGetTool         │ 同上                │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 16  │ TaskUpdateTool      │ 同上                │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 17  │ TaskListTool        │ 同上                │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 18  │ AskUserQuestionTool │ 模型直接在對話講    │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 19  │ EnterPlanModeTool   │ 模型直接講          │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 20  │ ExitPlanModeV2Tool  │ 模型直接講          │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 21  │ SkillTool           │ shell 就是 skill    │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 22  │ BriefTool           │ 不需要              │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 23  │ ToolSearchTool      │ 工具才 7 個不用搜   │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 24  │ TaskStopTool        │ 不需要              │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 25  │ EnterWorktreeTool   │ 不需要              │
+  ├─────┼─────────────────────┼─────────────────────┤
+  │ 26  │ ExitWorktreeTool    │ 不需要              │
+  └─────┴─────────────────────┴─────────────────────┘
+
+  已經是死碼（feature/USER_TYPE 鎖住，runtime 永遠不載入）：28 個目錄
+
+  ConfigTool, TungstenTool, REPLTool, PowerShellTool, LSPTool, WebBrowserTool, SleepTool, MonitorTool, SnipTool, WorkflowTool, ScheduleCronTool,
+   RemoteTriggerTool, SendUserFileTool, PushNotificationTool, SubscribePRTool, SuggestBackgroundPRTool, OverflowTestTool, CtxInspectTool,
+  TerminalCaptureTool, ListPeersTool, TeamCreateTool, TeamDeleteTool, VerifyPlanExecutionTool, McpAuthTool, DiscoverSkillsTool,
+  ReviewArtifactTool, SyntheticOutputTool, testing/
+
+  建議分兩波砍：
+
+  1. 先砍 28 個死碼目錄 — 零風險，立刻減少 build size 和 imports 混亂
+  2. 再砍 26→7 活工具 — 需要改 tools.ts + 確認 shell 能接管，改動較大
+
+  砍掉 28 個死碼工具目錄 — 零運行時影響，全部被 feature()=false 或 USER_TYPE=undefined 鎖住
+
+  修復 27 個檔案的斷裂引用 — 用 inline 常數取代刪除的 import（'sleep'、'repl'、'synthetic_output' 等），dead code branch 移除或 no-op
+
+  Build 通過 — 4965 modules 打包成功
+
+  現在工具目錄從 55 個降到 27 個。下一步可以開始第二波：把 26 個活工具往 7 個收（砍 GlobTool、GrepTool、WebFetchTool 等，讓 shell
+  接管）。要繼續嗎？
+
+✻ Brewed for 10m 30s
+
+❯ by the way 我翻src 發現有一大堆資料夾 一堆ts看起來很唬人 結果點進去都是什麼export{}就沒了這種stub或是少少的幾行.....哎呀 怎麼說               
+有時候感覺...反正這些之後也要對他們動手腳 不過現在可能先繼續做第二波吧 在做之前我重新確認一下 展示一下你打算26個工具要怎麼對待                  
+
+● 好，現在 26 個活工具的處置計畫：
+
+  目標：7 個工具
+
+  ┌─────┬──────────────┬───────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────┐
+  │  #  │   目標工具   │                                 取代什麼                                  │                  現狀                  │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 1   │ shell        │ BashTool + FileReadTool + GlobTool + GrepTool + WebFetchTool +            │ BashTool 已存在，其他 6                │
+  │     │              │ WebSearchTool + NotebookEditTool                                          │ 個刪掉讓模型用標準 CLI                 │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 2   │ apply_patch  │ FileEditTool + FileWriteTool                                              │ 不存在，需要新建                       │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 3   │ spawn_agent  │ AgentTool                                                                 │ AgentTool 已存在，改名                 │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 4   │ wait_agent   │ TaskOutputTool                                                            │ 已存在，改名                           │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 5   │ send_message │ SendMessageTool                                                           │ 已存在                                 │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 6   │ close_agent  │ 無                                                                        │ 不存在，需要新建                       │
+  ├─────┼──────────────┼───────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 7   │ list_agents  │ 無                                                                        │ 不存在，需要新建                       │
+  └─────┴──────────────┴───────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────┘
+
+  刪除分兩階段
+
+  Phase A — 立刻可刪（shell 完全接管，零風險）：
+
+  ┌─────────────────────┬────────────────────────┐
+  │        工具         │        模型改用        │
+  ├─────────────────────┼────────────────────────┤
+  │ GlobTool            │ find / ls via BashTool │
+  ├─────────────────────┼────────────────────────┤
+  │ GrepTool            │ grep / rg via BashTool │
+  ├─────────────────────┼────────────────────────┤
+  │ WebFetchTool        │ curl via BashTool      │
+  ├─────────────────────┼────────────────────────┤
+  │ WebSearchTool       │ curl via BashTool      │
+  ├─────────────────────┼────────────────────────┤
+  │ NotebookEditTool    │ jq via BashTool        │
+  ├─────────────────────┼────────────────────────┤
+  │ TodoWriteTool       │ 不需要，模型自己追蹤   │
+  ├─────────────────────┼────────────────────────┤
+  │ TaskCreateTool      │ 同上                   │
+  ├─────────────────────┼────────────────────────┤
+  │ TaskGetTool         │ 同上                   │
+  ├─────────────────────┼────────────────────────┤
+  │ TaskUpdateTool      │ 同上                   │
+  ├─────────────────────┼────────────────────────┤
+  │ TaskListTool        │ 同上                   │
+  ├─────────────────────┼────────────────────────┤
+  │ AskUserQuestionTool │ 模型直接在對話講       │
+  ├─────────────────────┼────────────────────────┤
+  │ EnterPlanModeTool   │ 模型直接講             │
+  ├─────────────────────┼────────────────────────┤
+  │ ExitPlanModeV2Tool  │ 模型直接講             │
+  ├─────────────────────┼────────────────────────┤
+  │ SkillTool           │ shell 就是 skill       │
+  ├─────────────────────┼────────────────────────┤
+  │ BriefTool           │ 不需要                 │
+  ├─────────────────────┼────────────────────────┤
+  │ ToolSearchTool      │ 工具才 7 個不用搜      │
+  ├─────────────────────┼────────────────────────┤
+  │ TaskStopTool        │ 不需要                 │
+  ├─────────────────────┼────────────────────────┤
+  │ EnterWorktreeTool   │ 不需要                 │
+  ├─────────────────────┼────────────────────────┤
+  │ ExitWorktreeTool    │ 不需要                 │
+  └─────────────────────┴────────────────────────┘
+
+  共 19 個，刪完剩下 7 個。
+
+  Phase B — 等新建 apply_patch 後再刪：
+
+  ┌───────────────┬───────────────────────────────────────────┐
+  │     工具      │             為什麼不能現在刪              │
+  ├───────────────┼───────────────────────────────────────────┤
+  │ FileEditTool  │ 模型用 sed 改檔案很脆弱，需要 apply_patch │
+  ├───────────────┼───────────────────────────────────────────┤
+  │ FileWriteTool │ 同上                                      │
+  └───────────────┴───────────────────────────────────────────┘
+
+  Phase C — 未來新建：
+
+  ┌─────────────┬──────────────────────────────────────────────────────────────┐
+  │   新工具    │                             說明                             │
+  ├─────────────┼──────────────────────────────────────────────────────────────┤
+  │ apply_patch │ Codex 風格 freeform patch，取代 FileEditTool + FileWriteTool │
+  ├─────────────┼──────────────────────────────────────────────────────────────┤
+  │ close_agent │ 關閉子代理                                                   │
+  ├─────────────┼──────────────────────────────────────────────────────────────┤
+  │ list_agents │ 列出活代理                                                   │
+  └─────────────┴──────────────────────────────────────────────────────────────┘
+
+  ---
+  另外還有 MCP 三個（ListMcpResourcesTool、ReadMcpResourceTool、MCPTool）— 
