@@ -41,8 +41,7 @@ import { prefetchOfficialMcpUrls } from './services/mcp/officialRegistry.js';
 import type { McpSdkServerConfig, McpServerConfig, ScopedMcpServerConfig } from './services/mcp/types.js';
 import { isPolicyAllowed, loadPolicyLimits, refreshPolicyLimits, waitForPolicyLimitsToLoad } from './services/policyLimits/index.js';
 import { loadRemoteManagedSettings, refreshRemoteManagedSettings } from './services/remoteManagedSettings/index.js';
-import type { ToolInputJSONSchema } from './Tool.js';
-import { createSyntheticOutputTool, isSyntheticOutputToolEnabled } from './tools/SyntheticOutputTool/SyntheticOutputTool.js';
+
 import { getTools } from './tools.js';
 import { canUserConfigureAdvisor, getInitialAdvisorSetting, isAdvisorEnabled, isValidAdvisorModel, modelSupportsAdvisor } from './utils/advisor.js';
 import { isAgentSwarmsEnabled } from './utils/agentSwarmsEnabled.js';
@@ -1696,29 +1695,8 @@ async function run(): Promise<CommanderCommand> {
     let tools = getTools(toolPermissionContext);
 
     profileCheckpoint('action_tools_loaded');
-    let jsonSchema: ToolInputJSONSchema | undefined;
-    if (isSyntheticOutputToolEnabled({
-      isNonInteractiveSession
-    }) && options.jsonSchema) {
-      jsonSchema = jsonParse(options.jsonSchema) as ToolInputJSONSchema;
-    }
-    if (jsonSchema) {
-      const syntheticOutputResult = createSyntheticOutputTool(jsonSchema);
-      if ('tool' in syntheticOutputResult) {
-        // Add SyntheticOutputTool to the tools array AFTER getTools() filtering.
-        // This tool is excluded from normal filtering (see tools.ts) because it's
-        // an implementation detail for structured output, not a user-controlled tool.
-        tools = [...tools, syntheticOutputResult.tool];
-        logEvent('tengu_structured_output_enabled', {
-          schema_property_count: Object.keys(jsonSchema.properties as Record<string, unknown> || {}).length as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-          has_required_fields: Boolean(jsonSchema.required) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-        });
-      } else {
-        logEvent('tengu_structured_output_failure', {
-          error: 'Invalid JSON schema' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-        });
-      }
-    }
+    // SyntheticOutputTool removed (directory deleted) — structured output is dead code
+    const jsonSchema = undefined;
 
     // IMPORTANT: setup() must be called before any other code that depends on the cwd or worktree setup
     profileCheckpoint('action_before_setup');

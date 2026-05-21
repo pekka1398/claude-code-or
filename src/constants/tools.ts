@@ -1,5 +1,4 @@
 
-import { feature } from 'bun:bundle'
 import { TASK_OUTPUT_TOOL_NAME } from '../tools/TaskOutputTool/constants.js'
 import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../tools/ExitPlanModeTool/constants.js'
 import { ENTER_PLAN_MODE_TOOL_NAME } from '../tools/EnterPlanModeTool/constants.js'
@@ -23,15 +22,11 @@ import { TASK_GET_TOOL_NAME } from '../tools/TaskGetTool/constants.js'
 import { TASK_LIST_TOOL_NAME } from '../tools/TaskListTool/constants.js'
 import { TASK_UPDATE_TOOL_NAME } from '../tools/TaskUpdateTool/constants.js'
 import { TOOL_SEARCH_TOOL_NAME } from '../tools/ToolSearchTool/prompt.js'
-import { SYNTHETIC_OUTPUT_TOOL_NAME } from '../tools/SyntheticOutputTool/SyntheticOutputTool.js'
+// SyntheticOutputTool removed — no longer imported
 import { ENTER_WORKTREE_TOOL_NAME } from '../tools/EnterWorktreeTool/constants.js'
 import { EXIT_WORKTREE_TOOL_NAME } from '../tools/ExitWorktreeTool/constants.js'
-import { WORKFLOW_TOOL_NAME } from '../tools/WorkflowTool/constants.js'
-import {
-  CRON_CREATE_TOOL_NAME,
-  CRON_DELETE_TOOL_NAME,
-  CRON_LIST_TOOL_NAME,
-} from '../tools/ScheduleCronTool/prompt.js'
+// WorkflowTool removed — no longer imported
+// ScheduleCronTool removed — no longer imported
 
 export const ALL_AGENT_DISALLOWED_TOOLS = new Set([
   TASK_OUTPUT_TOOL_NAME,
@@ -41,8 +36,7 @@ export const ALL_AGENT_DISALLOWED_TOOLS = new Set([
   ...(process.env.USER_TYPE === 'ant' ? [] : [AGENT_TOOL_NAME]),
   ASK_USER_QUESTION_TOOL_NAME,
   TASK_STOP_TOOL_NAME,
-  // Prevent recursive workflow execution inside subagents.
-  ...(feature('WORKFLOW_SCRIPTS') ? [WORKFLOW_TOOL_NAME] : []),
+  // WorkflowTool removed (directory deleted); feature('WORKFLOW_SCRIPTS') was always false
 ])
 
 export const CUSTOM_AGENT_DISALLOWED_TOOLS = new Set([
@@ -64,7 +58,7 @@ export const ASYNC_AGENT_ALLOWED_TOOLS = new Set([
   FILE_WRITE_TOOL_NAME,
   NOTEBOOK_EDIT_TOOL_NAME,
   SKILL_TOOL_NAME,
-  SYNTHETIC_OUTPUT_TOOL_NAME,
+  // SYNTHETIC_OUTPUT_TOOL_NAME removed (tool directory deleted)
   TOOL_SEARCH_TOOL_NAME,
   ENTER_WORKTREE_TOOL_NAME,
   EXIT_WORKTREE_TOOL_NAME,
@@ -80,11 +74,7 @@ export const IN_PROCESS_TEAMMATE_ALLOWED_TOOLS = new Set([
   TASK_LIST_TOOL_NAME,
   TASK_UPDATE_TOOL_NAME,
   SEND_MESSAGE_TOOL_NAME,
-  // Teammate-created crons are tagged with the creating agentId and routed to
-  // that teammate's pendingUserMessages queue (see useScheduledTasks.ts).
-  ...(feature('AGENT_TRIGGERS')
-    ? [CRON_CREATE_TOOL_NAME, CRON_DELETE_TOOL_NAME, CRON_LIST_TOOL_NAME]
-    : []),
+  // ScheduleCronTool removed (directory deleted); feature('AGENT_TRIGGERS') was always false
 ])
 
 /*
@@ -108,5 +98,5 @@ export const COORDINATOR_MODE_ALLOWED_TOOLS = new Set([
   AGENT_TOOL_NAME,
   TASK_STOP_TOOL_NAME,
   SEND_MESSAGE_TOOL_NAME,
-  SYNTHETIC_OUTPUT_TOOL_NAME,
+  // SYNTHETIC_OUTPUT_TOOL_NAME removed (tool directory deleted)
 ])

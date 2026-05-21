@@ -14,7 +14,7 @@ import { FileWriteTool } from '../../tools/FileWriteTool/FileWriteTool.js';
 import { GlobTool } from '../../tools/GlobTool/GlobTool.js';
 import { GrepTool } from '../../tools/GrepTool/GrepTool.js';
 import { NotebookEditTool } from '../../tools/NotebookEditTool/NotebookEditTool.js';
-import { PowerShellTool } from '../../tools/PowerShellTool/PowerShellTool.js';
+// PowerShellTool import removed — directory deleted
 import { SkillTool } from '../../tools/SkillTool/SkillTool.js';
 import { WebFetchTool } from '../../tools/WebFetchTool/WebFetchTool.js';
 import type { AssistantMessage } from '../../types/message.js';
@@ -33,12 +33,13 @@ import { SkillPermissionRequest } from './SkillPermissionRequest/SkillPermission
 import { WebFetchPermissionRequest } from './WebFetchPermissionRequest/WebFetchPermissionRequest.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
-const ReviewArtifactTool = feature('REVIEW_ARTIFACT') ? (require('../../tools/ReviewArtifactTool/ReviewArtifactTool.js') as typeof import('../../tools/ReviewArtifactTool/ReviewArtifactTool.js')).ReviewArtifactTool : null;
-const ReviewArtifactPermissionRequest = feature('REVIEW_ARTIFACT') ? (require('./ReviewArtifactPermissionRequest/ReviewArtifactPermissionRequest.js') as typeof import('./ReviewArtifactPermissionRequest/ReviewArtifactPermissionRequest.js')).ReviewArtifactPermissionRequest : null;
-const WorkflowTool = feature('WORKFLOW_SCRIPTS') ? (require('../../tools/WorkflowTool/WorkflowTool.js') as typeof import('../../tools/WorkflowTool/WorkflowTool.js')).WorkflowTool : null;
-const WorkflowPermissionRequest = feature('WORKFLOW_SCRIPTS') ? (require('../../tools/WorkflowTool/WorkflowPermissionRequest.js') as typeof import('../../tools/WorkflowTool/WorkflowPermissionRequest.js')).WorkflowPermissionRequest : null;
-const MonitorTool = feature('MONITOR_TOOL') ? (require('../../tools/MonitorTool/MonitorTool.js') as typeof import('../../tools/MonitorTool/MonitorTool.js')).MonitorTool : null;
-const MonitorPermissionRequest = feature('MONITOR_TOOL') ? (require('./MonitorPermissionRequest/MonitorPermissionRequest.js') as typeof import('./MonitorPermissionRequest/MonitorPermissionRequest.js')).MonitorPermissionRequest : null;
+// ReviewArtifactTool, WorkflowTool, MonitorTool removed — directories deleted
+const ReviewArtifactTool = null as any;
+const ReviewArtifactPermissionRequest = null;
+const WorkflowTool = null as any;
+const WorkflowPermissionRequest = null;
+const MonitorTool = null as any;
+const MonitorPermissionRequest = null;
 import type { ContentBlockParam } from '@anthropic-ai/sdk/resources/messages.mjs';
 /* eslint-enable @typescript-eslint/no-require-imports */
 import type { z } from 'zod/v4';
@@ -52,10 +53,8 @@ function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionR
       return FileWritePermissionRequest;
     case BashTool:
       return BashPermissionRequest;
-    case PowerShellTool:
-      return PowerShellPermissionRequest;
-    case ReviewArtifactTool:
-      return ReviewArtifactPermissionRequest ?? FallbackPermissionRequest;
+    // PowerShellTool removed — PowerShellPermissionRequest never reached via this switch
+    // ReviewArtifactTool removed — case unreachable
     case WebFetchTool:
       return WebFetchPermissionRequest;
     case NotebookEditTool:
@@ -68,10 +67,7 @@ function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionR
       return SkillPermissionRequest;
     case AskUserQuestionTool:
       return AskUserQuestionPermissionRequest;
-    case WorkflowTool:
-      return WorkflowPermissionRequest ?? FallbackPermissionRequest;
-    case MonitorTool:
-      return MonitorPermissionRequest ?? FallbackPermissionRequest;
+    // WorkflowTool and MonitorTool removed — cases unreachable
     case GlobTool:
     case GrepTool:
     case FileReadTool:
@@ -133,6 +129,7 @@ function getNotificationMessage(toolUseConfirm: ToolUseConfirm): string {
   if (toolUseConfirm.tool === EnterPlanModeTool) {
     return 'Claude Code wants to enter plan mode';
   }
+  // ReviewArtifactTool removed — this check is dead code (feature always false)
   if (feature('REVIEW_ARTIFACT') && toolUseConfirm.tool === ReviewArtifactTool) {
     return 'Claude needs your approval for a review artifact';
   }

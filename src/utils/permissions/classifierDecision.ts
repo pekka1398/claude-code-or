@@ -6,44 +6,41 @@ import { FILE_READ_TOOL_NAME } from '../../tools/FileReadTool/prompt.js'
 import { GLOB_TOOL_NAME } from '../../tools/GlobTool/prompt.js'
 import { GREP_TOOL_NAME } from '../../tools/GrepTool/prompt.js'
 import { LIST_MCP_RESOURCES_TOOL_NAME } from '../../tools/ListMcpResourcesTool/prompt.js'
-import { LSP_TOOL_NAME } from '../../tools/LSPTool/prompt.js'
+// LSP_TOOL_NAME: tool directory removed; use literal string 'lsp'
+const LSP_TOOL_NAME = 'lsp'
 import { SEND_MESSAGE_TOOL_NAME } from '../../tools/SendMessageTool/constants.js'
-import { SLEEP_TOOL_NAME } from '../../tools/SleepTool/prompt.js'
+// SLEEP_TOOL_NAME: tool directory removed; use literal string 'sleep'
+const SLEEP_TOOL_NAME = 'sleep'
 import { TASK_CREATE_TOOL_NAME } from '../../tools/TaskCreateTool/constants.js'
 import { TASK_GET_TOOL_NAME } from '../../tools/TaskGetTool/constants.js'
 import { TASK_LIST_TOOL_NAME } from '../../tools/TaskListTool/constants.js'
 import { TASK_OUTPUT_TOOL_NAME } from '../../tools/TaskOutputTool/constants.js'
 import { TASK_STOP_TOOL_NAME } from '../../tools/TaskStopTool/prompt.js'
 import { TASK_UPDATE_TOOL_NAME } from '../../tools/TaskUpdateTool/constants.js'
-import { TEAM_CREATE_TOOL_NAME } from '../../tools/TeamCreateTool/constants.js'
-import { TEAM_DELETE_TOOL_NAME } from '../../tools/TeamDeleteTool/constants.js'
+// TEAM_CREATE_TOOL_NAME: tool directory removed; use literal string 'team_create'
+const TEAM_CREATE_TOOL_NAME = 'team_create'
+// TEAM_DELETE_TOOL_NAME: tool directory removed; use literal string 'team_delete'
+const TEAM_DELETE_TOOL_NAME = 'team_delete'
 import { TODO_WRITE_TOOL_NAME } from '../../tools/TodoWriteTool/constants.js'
 import { TOOL_SEARCH_TOOL_NAME } from '../../tools/ToolSearchTool/prompt.js'
 import { YOLO_CLASSIFIER_TOOL_NAME } from './yoloClassifier.js'
 
-// Ant-only tool names: conditional require so Bun can DCE these in external builds.
-// Gates mirror tools.ts. Keeps the tool name strings out of cli.js.
+// Ant-only tool names: directories removed; use literal strings.
+// feature() always returns false, so these are effectively null, but kept as
+// literals for type compatibility with the SAFE_YOLO_ALLOWLISTED_TOOLS set.
 /* eslint-disable @typescript-eslint/no-require-imports */
-const TERMINAL_CAPTURE_TOOL_NAME = feature('TERMINAL_PANEL')
-  ? (
-      require('../../tools/TerminalCaptureTool/prompt.js') as typeof import('../../tools/TerminalCaptureTool/prompt.js')
-    ).TERMINAL_CAPTURE_TOOL_NAME
+const TERMINAL_CAPTURE_TOOL_NAME: string | null = feature('TERMINAL_PANEL')
+  ? 'terminal_capture'
   : null
-const OVERFLOW_TEST_TOOL_NAME = feature('OVERFLOW_TEST_TOOL')
-  ? (
-      require('../../tools/OverflowTestTool/OverflowTestTool.js') as typeof import('../../tools/OverflowTestTool/OverflowTestTool.js')
-    ).OVERFLOW_TEST_TOOL_NAME
+const OVERFLOW_TEST_TOOL_NAME: string | null = feature('OVERFLOW_TEST_TOOL')
+  ? 'overflow_test'
   : null
-const VERIFY_PLAN_EXECUTION_TOOL_NAME =
+const VERIFY_PLAN_EXECUTION_TOOL_NAME: string | null =
   process.env.USER_TYPE === 'ant'
-    ? (
-        require('../../tools/VerifyPlanExecutionTool/constants.js') as typeof import('../../tools/VerifyPlanExecutionTool/constants.js')
-      ).VERIFY_PLAN_EXECUTION_TOOL_NAME
+    ? 'verify_plan_execution'
     : null
-const WORKFLOW_TOOL_NAME = feature('WORKFLOW_SCRIPTS')
-  ? (
-      require('../../tools/WorkflowTool/constants.js') as typeof import('../../tools/WorkflowTool/constants.js')
-    ).WORKFLOW_TOOL_NAME
+const WORKFLOW_TOOL_NAME: string | null = feature('WORKFLOW_SCRIPTS')
+  ? 'workflow'
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 

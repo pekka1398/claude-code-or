@@ -8,7 +8,7 @@ import type { Tools } from '../../Tool.js';
 import { findToolByName } from '../../Tool.js';
 import type { AgentToolResult } from '../../tools/AgentTool/agentToolUtils.js';
 import type { AgentDefinition } from '../../tools/AgentTool/loadAgentsDir.js';
-import { SYNTHETIC_OUTPUT_TOOL_NAME } from '../../tools/SyntheticOutputTool/SyntheticOutputTool.js';
+const SYNTHETIC_OUTPUT_TOOL_NAME = 'synthetic_output';
 import { asAgentId } from '../../types/ids.js';
 import type { Message } from '../../types/message.js';
 import { createAbortController, createChildAbortController } from '../../utils/abortController.js';

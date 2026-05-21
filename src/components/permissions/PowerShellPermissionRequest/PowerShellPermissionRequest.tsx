@@ -4,9 +4,12 @@ import { useKeybinding } from '../../../keybindings/useKeybinding.js';
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../../services/analytics/growthbook.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from '../../../services/analytics/index.js';
 import { sanitizeToolNameForAnalytics } from '../../../services/analytics/metadata.js';
-import { getDestructiveCommandWarning } from '../../../tools/PowerShellTool/destructiveCommandWarning.js';
-import { PowerShellTool } from '../../../tools/PowerShellTool/PowerShellTool.js';
-import { isAllowlistedCommand } from '../../../tools/PowerShellTool/readOnlyValidation.js';
+// PowerShellTool, getDestructiveCommandWarning, isAllowlistedCommand removed — PowerShellTool directory deleted
+// Stubs for deleted PowerShellTool exports used in this component
+const POWERSHELL_TOOL_NAME = 'power_shell';
+const PowerShellTool = { name: POWERSHELL_TOOL_NAME, inputSchema: { parse: (_: unknown) => { throw new Error('PowerShellTool not available'); } }, renderToolUseMessage: (_: unknown, __: unknown) => '' } as any;
+const getDestructiveCommandWarning = (_command: string): string | null => null;
+const isAllowlistedCommand = (_element: any, _text?: string): boolean => false;
 import type { PermissionUpdate } from '../../../utils/permissions/PermissionUpdateSchema.js';
 import { getCompoundCommandPrefixesStatic } from '../../../utils/powershell/staticPrefix.js';
 import { Select } from '../../CustomSelect/select.js';

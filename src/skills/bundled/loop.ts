@@ -1,9 +1,11 @@
-import {
-  CRON_CREATE_TOOL_NAME,
-  CRON_DELETE_TOOL_NAME,
-  DEFAULT_MAX_AGE_DAYS,
-  isKairosCronEnabled,
-} from '../../tools/ScheduleCronTool/prompt.js'
+// CRON_CREATE_TOOL_NAME, CRON_DELETE_TOOL_NAME, isKairosCronEnabled were imported
+// from deleted '../../tools/ScheduleCronTool/prompt.js'
+const CRON_CREATE_TOOL_NAME = 'cron_create'
+const CRON_DELETE_TOOL_NAME = 'cron_delete'
+const DEFAULT_MAX_AGE_DAYS = 30
+function isKairosCronEnabled(): boolean {
+  return false
+}
 import { registerBundledSkill } from '../bundledSkills.js'
 
 const DEFAULT_INTERVAL = '10m'

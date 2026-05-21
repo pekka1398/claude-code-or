@@ -52,7 +52,10 @@ import {
 } from '../../Tool.js'
 import { ListMcpResourcesTool } from '../../tools/ListMcpResourcesTool/ListMcpResourcesTool.js'
 import { type MCPProgress, MCPTool } from '../../tools/MCPTool/MCPTool.js'
-import { createMcpAuthTool } from '../../tools/McpAuthTool/McpAuthTool.js'
+// createMcpAuthTool removed — McpAuthTool directory deleted. Stub returns a placeholder tool.
+function createMcpAuthTool(_name: string, _config: any): any {
+  return { name: 'mcp_auth', description: 'MCP auth (not available)', inputSchema: {} }
+}
 import { ReadMcpResourceTool } from '../../tools/ReadMcpResourceTool/ReadMcpResourceTool.js'
 import { createAbortController } from '../../utils/abortController.js'
 import { count } from '../../utils/array.js'

@@ -16,7 +16,7 @@ import { FILE_WRITE_TOOL_NAME } from 'src/tools/FileWriteTool/prompt.js'
 import { GLOB_TOOL_NAME } from 'src/tools/GlobTool/prompt.js'
 import { GREP_TOOL_NAME } from 'src/tools/GrepTool/prompt.js'
 import { LIST_MCP_RESOURCES_TOOL_NAME } from 'src/tools/ListMcpResourcesTool/prompt.js'
-import { LSP_TOOL_NAME } from 'src/tools/LSPTool/prompt.js'
+// LSP_TOOL_NAME: tool directory removed; use literal string for categorization
 import { NOTEBOOK_EDIT_TOOL_NAME } from 'src/tools/NotebookEditTool/constants.js'
 import { TASK_STOP_TOOL_NAME } from 'src/tools/TaskStopTool/prompt.js'
 import { WEB_SEARCH_TOOL_NAME } from 'src/tools/WebSearchTool/prompt.js'
@@ -39,7 +39,7 @@ const SEARCH_TOOLS = [
   GREP_TOOL_NAME,
   GLOB_TOOL_NAME,
   WEB_SEARCH_TOOL_NAME,
-  LSP_TOOL_NAME,
+  'lsp',
 ]
 const READ_TOOLS = [FILE_READ_TOOL_NAME, LIST_MCP_RESOURCES_TOOL_NAME]
 const WRITE_TOOLS = [

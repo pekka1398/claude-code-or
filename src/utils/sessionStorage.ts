@@ -34,7 +34,7 @@ import { builtInCommandNames } from '../commands.js'
 import { COMMAND_NAME_TAG, TICK_TAG } from '../constants/xml.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js'
 import * as sessionIngress from '../services/api/sessionIngress.js'
-import { REPL_TOOL_NAME } from '../tools/REPLTool/constants.js'
+// 'repl': tool directory removed; use literal string
 import {
   type AgentId,
   asAgentId,
@@ -4372,7 +4372,7 @@ function collectReplIds(messages: readonly Message[]): Set<string> {
   for (const m of messages) {
     if (m.type === 'assistant' && Array.isArray(m.message.content)) {
       for (const b of m.message.content) {
-        if (b.type === 'tool_use' && b.name === REPL_TOOL_NAME) {
+        if (b.type === 'tool_use' && b.name === 'repl') {
           ids.add(b.id)
         }
       }
@@ -4402,11 +4402,11 @@ function transformMessagesForExternalTranscript(
     if (m.type === 'assistant' && Array.isArray(m.message.content)) {
       const content = m.message.content
       const hasRepl = content.some(
-        b => b.type === 'tool_use' && b.name === REPL_TOOL_NAME,
+        b => b.type === 'tool_use' && b.name === 'repl',
       )
       const filtered = hasRepl
         ? content.filter(
-            b => !(b.type === 'tool_use' && b.name === REPL_TOOL_NAME),
+            b => !(b.type === 'tool_use' && b.name === 'repl'),
           )
         : content
       if (filtered.length === 0) return []

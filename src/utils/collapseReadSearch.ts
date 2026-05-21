@@ -5,8 +5,8 @@ import { extractBashCommentLabel } from '../tools/BashTool/commentLabel.js'
 import { BASH_TOOL_NAME } from '../tools/BashTool/toolName.js'
 import { FILE_EDIT_TOOL_NAME } from '../tools/FileEditTool/constants.js'
 import { FILE_WRITE_TOOL_NAME } from '../tools/FileWriteTool/prompt.js'
-import { REPL_TOOL_NAME } from '../tools/REPLTool/constants.js'
-import { getReplPrimitiveTools } from '../tools/REPLTool/primitiveTools.js'
+// REPL_TOOL_NAME: tool directory removed; use literal string 'repl'
+// getReplPrimitiveTools: tool directory removed; use empty array
 import {
   type BranchAction,
   type CommitKind,
@@ -54,10 +54,9 @@ import {
 const teamMemOps = feature('TEAMMEM')
   ? (require('./teamMemoryOps.js') as typeof import('./teamMemoryOps.js'))
   : null
-const SNIP_TOOL_NAME = feature('HISTORY_SNIP')
-  ? (
-      require('../tools/SnipTool/prompt.js') as typeof import('../tools/SnipTool/prompt.js')
-    ).SNIP_TOOL_NAME
+// SNIP_TOOL_NAME: tool directory removed; use literal string 'snip'
+const SNIP_TOOL_NAME: string | null = feature('HISTORY_SNIP')
+  ? 'snip'
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 
@@ -169,7 +168,7 @@ export function getToolSearchOrReadInfo(
   // messages (isVirtual: true) via newMessages and flow through this function
   // as regular Read/Grep/Bash messages. The REPL wrapper itself contributes
   // no counts and doesn't break the group, so consecutive REPL calls merge.
-  if (toolName === REPL_TOOL_NAME) {
+  if (toolName === 'repl') {
     return {
       isCollapsible: true,
       isSearch: false,
@@ -218,7 +217,7 @@ export function getToolSearchOrReadInfo(
   // vanish from the summary line.
   const tool =
     findToolByName(tools, toolName) ??
-    findToolByName(getReplPrimitiveTools(), toolName)
+    findToolByName([], toolName)
   if (!tool?.isSearchOrReadCommand) {
     return {
       isCollapsible: false,

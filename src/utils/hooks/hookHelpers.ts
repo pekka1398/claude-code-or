@@ -1,9 +1,7 @@
 import { z } from 'zod/v4'
 import type { Tool } from '../../Tool.js'
-import {
-  SYNTHETIC_OUTPUT_TOOL_NAME,
-  SyntheticOutputTool,
-} from '../../tools/SyntheticOutputTool/SyntheticOutputTool.js'
+// SYNTHETIC_OUTPUT_TOOL_NAME / SyntheticOutputTool: tool directory removed; use literal string and inline stub
+const SYNTHETIC_OUTPUT_TOOL_NAME = 'synthetic_output'
 import { substituteArguments } from '../argumentSubstitution.js'
 import { lazySchema } from '../lazySchema.js'
 import type { SetAppState } from '../messageQueueManager.js'
@@ -40,7 +38,7 @@ export function addArgumentsToPrompt(
  */
 export function createStructuredOutputTool(): Tool {
   return {
-    ...SyntheticOutputTool,
+    name: SYNTHETIC_OUTPUT_TOOL_NAME,
     inputSchema: hookResponseSchema(),
     inputJSONSchema: {
       type: 'object',

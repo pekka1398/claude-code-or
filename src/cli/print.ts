@@ -200,7 +200,7 @@ import {
   getInitJsonSchema,
   setSdkAgentProgressSummariesEnabled,
 } from 'src/bootstrap/state.js'
-import { createSyntheticOutputTool } from 'src/tools/SyntheticOutputTool/SyntheticOutputTool.js'
+// SyntheticOutputTool removed — createSyntheticOutputTool import removed
 import { parseSessionIdentifier } from 'src/utils/sessionUrl.js'
 import {
   hydrateRemoteSession,
@@ -363,9 +363,8 @@ const cronSchedulerModule = feature('AGENT_TRIGGERS')
 const cronJitterConfigModule = feature('AGENT_TRIGGERS')
   ? (require('../utils/cronJitterConfig.js') as typeof import('../utils/cronJitterConfig.js'))
   : null
-const cronGate = feature('AGENT_TRIGGERS')
-  ? (require('../tools/ScheduleCronTool/prompt.js') as typeof import('../tools/ScheduleCronTool/prompt.js'))
-  : null
+// ScheduleCronTool removed — cronGate stubbed to null (feature('AGENT_TRIGGERS') is always false)
+const cronGate = null as any
 const extractMemoriesModule = feature('EXTRACT_MEMORIES')
   ? (require('../services/extractMemories/extractMemories.js') as typeof import('../services/extractMemories/extractMemories.js'))
   : null
@@ -1479,13 +1478,14 @@ function runHeadlessStreaming(
         tool => !toolMatchesName(tool, options.permissionPromptToolName!),
       )
     }
-    const initJsonSchema = getInitJsonSchema()
-    if (initJsonSchema && !options.jsonSchema) {
-      const syntheticOutputResult = createSyntheticOutputTool(initJsonSchema)
-      if ('tool' in syntheticOutputResult) {
-        allTools = [...allTools, syntheticOutputResult.tool]
-      }
-    }
+    // SyntheticOutputTool removed — skip structured output tool creation
+    // const initJsonSchema = getInitJsonSchema()
+    // if (initJsonSchema && !options.jsonSchema) {
+    //   const syntheticOutputResult = createSyntheticOutputTool(initJsonSchema)
+    //   if ('tool' in syntheticOutputResult) {
+    //     allTools = [...allTools, syntheticOutputResult.tool]
+    //   }
+    // }
     return allTools
   }
 
