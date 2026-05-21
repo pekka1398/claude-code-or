@@ -1,5 +1,11 @@
 # Claude-OR
 
+curl -fsSL https://bun.com/install | bash
+bun install
+
+bun run build && cp -f dist/claude-or ~/.local/bin/claude-or rehash                                        
+               
+
 A fast, unlocked fork of Claude Code optimized for OpenRouter.
 
 > **Credit**: Based on [claude-code-best](https://github.com/claude-code-best/claude-code.git).
@@ -11,8 +17,7 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
 1. **Prerequisites**: [Bun](https://bun.sh/) must be installed.
 2. **Install Dependencies**:
    ```bash
-   curl -fsSL https://bun.com/install | bash
-   bun install
+
    ```
 3. **Configure Environment**:
    ```bash
@@ -30,11 +35,11 @@ A fast, unlocked fork of Claude Code optimized for OpenRouter.
    > You can also set these via `export` — env vars take priority over `.env`.
 4. **Build & Run**:
    ```bash
-      bun run build
+      
       # Optional: install to system binary folder
-      sudo mv dist/claude-or /usr/local/bin/claude-or
+      
       # Run
-      claude-or
+      
    ```
 5. **Discord Bridge** — In the REPL, type `/discord` to connect. Each call creates a new channel with synced history.
 

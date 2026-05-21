@@ -133,7 +133,7 @@ import {
   addOpenRouterActualCost,
   setLastRequestUsage,
 } from 'src/bootstrap/state.js'
-import { computePredictedCost } from 'src/utils/cacheAwareConfig.js'
+import { computePredictedCost, getProviderOrderForModel } from 'src/utils/cacheAwareConfig.js'
 import { appendFile } from 'fs/promises'
 import { join } from 'path'
 import { getClaudeConfigHomeDir } from 'src/utils/envUtils.js'
@@ -329,37 +329,16 @@ export function getExtraBodyParams(model?: string, betaHeaders?: string[]): Json
     }
   }
 
-  // OpenRouter: set provider order to prefer providers with stable KV cache.
-  // Data from 12K+ requests shows:
-  //   SiliconFlow: 1.8% miss, 0 consecutive misses — most stable
-  //   Z.AI:        2.6% miss, 9 consecutive misses — mostly stable
-  //   DeepInfra:   0% miss but fp4 quant + 32K max output — acceptable fallback
-  //   AtlasCloud:  7.9% miss, multi-node no shared cache — same as Friendli
-  //   Friendli:    8.5% miss, 208 consecutive misses — disaster
-  //   Chutes:      75% miss — unusable
-  // A stable cache hit on a good provider is far cheaper than a cache miss
-  // on a bad one (cache read = ~0.2x input price vs full price).
-  // Only apply this restriction for models where we have cache data;
-  // other models need all providers available.
-  if (getAPIProvider() === 'openrouter' && model?.includes('glm-5')) {
-    result.provider = {
-      order: ['SiliconFlow', 'Z.AI', 'DeepInfra'],
-      only: ['SiliconFlow', 'Z.AI', 'DeepInfra'],
-    }
-  }
-  // Kimi K2.6: prefer SiliconFlow (SG, fp8, 49tps, good cache), DeepInfra (fp4 fallback).
-  // Avoid io.net (int4 + 32K context limit), low-uptime providers.
-  if (getAPIProvider() === 'openrouter' && model?.includes('kimi-k2')) {
-    result.provider = {
-      order: ['SiliconFlow', 'DeepInfra', 'io.net'],
-      only: ['SiliconFlow', 'DeepInfra', 'io.net'],
-    }
-  }
-
-  // GPT-5.5: prefer OpenAI (native, best quality), Azure as fallback.
-  if (getAPIProvider() === 'openrouter' && model?.includes('gpt-5.5')) {
-    result.provider = {
-      order: ['OpenAI', 'Azure'],
+  // OpenRouter: set provider order + only from config.json providers.
+  // Reads ~/.claude-code-or/config.json models → providers, sorted by priority.
+  // All models use the same logic: config.json providers define both order and only.
+  if (getAPIProvider() === 'openrouter' && model) {
+    const providerOrder = getProviderOrderForModel(model)
+    if (providerOrder) {
+      result.provider = {
+        order: providerOrder,
+        only: providerOrder,
+      }
     }
   }
 
@@ -588,13 +567,11 @@ export function getAPIMetadata() {
 }
 
 export async function verifyApiKey(
-  apiKey: string,
+  _apiKey: string,
   isNonInteractiveSession: boolean,
 ): Promise<boolean> {
-  // Skip API verification if running in print mode (isNonInteractiveSession)
-  if (isNonInteractiveSession) {
-    return true
-  }
+  // Skip API verification — always assume key is valid to avoid unwanted API calls
+  return true
 
   try {
     // WARNING: if you change this to use a non-Haiku model, this request will fail in 1P unless it uses getCLISyspromptPrefix.
@@ -3393,6 +3370,8 @@ export async function queryHaiku({
   signal: AbortSignal
   options: HaikuOptions
 }): Promise<AssistantMessage> {
+  // Disabled: skip all background haiku/small-fast-model requests
+  return { type: 'assistant', message: { role: 'assistant', content: [] }, uuid: randomUUID() } as unknown as AssistantMessage
   const result = await withVCR(
     [
       createUserMessage({

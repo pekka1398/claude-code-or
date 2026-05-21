@@ -30,8 +30,8 @@ const feature = (name: string) => {
 };
 if (typeof globalThis.MACRO === "undefined") {
     (globalThis as any).MACRO = {
-        VERSION: "2.1.888",
-        BUILD_TIME: new Date().toISOString(),
+        VERSION: "2.1.888-or",
+        BUILD_TIME: "built-at-REPLACE_ME",
         FEEDBACK_CHANNEL: "",
         ISSUES_EXPLAINER: "",
         NATIVE_PACKAGE_URL: "",
@@ -117,7 +117,7 @@ async function main(): Promise<void> {
     ) {
         // MACRO.VERSION is inlined at build time
         
-        console.log(`${MACRO.VERSION} (Claude Code)`);
+        console.log(`${MACRO.VERSION} (Claude Code) ${MACRO.BUILD_TIME}`);
         return;
     }
 

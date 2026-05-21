@@ -39,29 +39,9 @@ export async function connectVoiceStream(
   callbacks: VoiceStreamCallbacks,
   _options?: { language?: string; keyterms?: string[] },
 ): Promise<VoiceStreamConnection | null> {
-  logForDebugging('[openrouter_stt] Initializing OpenRouter STT Bridge')
-
-  let audioBuffer = Buffer.alloc(0)
-  let isConnected = true
-
-  const connection: VoiceStreamConnection = {
-    send(audioChunk: Buffer): void {
-      if (!isConnected) return
-      audioBuffer = Buffer.concat([audioBuffer, audioChunk])
-    },
-
-    async finalize(): Promise<FinalizeSource> {
-      if (!isConnected) return 'error'
-      isConnected = false
-
-      logForDebugging(`[openrouter_stt] Finalizing, size: ${audioBuffer.length} bytes`)
-
-      if (audioBuffer.length === 0) {
-        callbacks.onClose()
-        return 'openrouter_stt'
-      }
-
-      try {
+  logForDebugging('[openrouter_stt] OpenRouter STT Bridge is disabled')
+  return null
+}
         const config = getGlobalConfig()
         const apiKey = process.env.OPENROUTER_API_KEY || config.primaryApiKey
 

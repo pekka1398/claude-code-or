@@ -88,6 +88,27 @@ export function computePredictedCost(
   )
 }
 
+/**
+ * Get the ordered list of provider names for a model from config.
+ * Sorted by priority (ascending = highest priority first).
+ * Uses the same matching logic as findModelConfig (exact → prefix glob → wildcard).
+ * Returns null if no config or no providers found.
+ */
+export function getProviderOrderForModel(model: string): string[] | null {
+  const config = loadConfig()
+  if (!config) return null
+
+  const mc = findModelConfig(config, model)
+  if (!mc || Object.keys(mc.providers).length === 0) return null
+
+  // Sort by priority ascending (lowest number = highest priority)
+  const sorted = Object.entries(mc.providers)
+    .sort(([, a], [, b]) => a.priority - b.priority)
+    .map(([name]) => name)
+
+  return sorted.length > 0 ? sorted : null
+}
+
 function findModelConfig(config: CacheAwareConfig, model: string): ModelConfig | null {
   // Exact match
   if (config.models[model]) return config.models[model]

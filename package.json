@@ -10,7 +10,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "bun build src/entrypoints/cli.tsx --compile --outfile dist/claude-or",
+        "build": "sed -i \"s/built-at-REPLACE_ME/built-at-$(date -u +%Y%m%d-%H%M%S)/\" src/entrypoints/cli.tsx && bun build src/entrypoints/cli.tsx --compile --outfile dist/claude-or && sed -i 's/built-at-[0-9-]*/built-at-REPLACE_ME/' src/entrypoints/cli.tsx",
         "dev": "bun run src/entrypoints/cli.tsx",
         "prepublishOnly": "bun run build",
         "lint": "biome lint src/",
