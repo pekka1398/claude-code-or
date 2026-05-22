@@ -4,7 +4,8 @@ import React, { useMemo } from 'react';
 import { useTerminalSize } from '../../../hooks/useTerminalSize.js';
 import { stringWidth } from '../../../ink/stringWidth.js';
 import { Box, Text } from '../../../ink.js';
-import type { Question } from '../../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
+// AskUserQuestionTool directory deleted — import Question from local definition
+import type { Question } from './QuestionView.js';
 import { truncateToWidth } from '../../../utils/format.js';
 type Props = {
   questions: Question[];

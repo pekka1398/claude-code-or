@@ -5,7 +5,8 @@ import type { KeyboardEvent } from '../../../ink/events/keyboard-event.js';
 import { Box, Text } from '../../../ink.js';
 import { useKeybinding, useKeybindings } from '../../../keybindings/useKeybinding.js';
 import { useAppState } from '../../../state/AppState.js';
-import type { Question } from '../../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
+// AskUserQuestionTool directory deleted — import Question from local definition
+import type { Question } from './QuestionView.js';
 import { getExternalEditor } from '../../../utils/editor.js';
 import { toIDEDisplayName } from '../../../utils/ide.js';
 import { editPromptInEditor } from '../../../utils/promptEditor.js';

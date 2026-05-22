@@ -22,11 +22,13 @@ import { count, uniq } from './array.js'
 import { getFsImplementation } from './fsOperations.js'
 import { readdir, stat } from 'fs/promises'
 import type { IDESelection } from '../hooks/useIdeSelection.js'
-import { TODO_WRITE_TOOL_NAME } from '../tools/TodoWriteTool/constants.js'
+// TODO_WRITE_TOOL_NAME: tool directory removed; use literal string
+const TODO_WRITE_TOOL_NAME = 'todo_write'
 import { TASK_CREATE_TOOL_NAME } from '../tools/TaskCreateTool/constants.js'
 import { TASK_UPDATE_TOOL_NAME } from '../tools/TaskUpdateTool/constants.js'
 import { BASH_TOOL_NAME } from '../tools/BashTool/toolName.js'
-import { SKILL_TOOL_NAME } from '../tools/SkillTool/constants.js'
+// SKILL_TOOL_NAME: tool directory removed; use literal string
+const SKILL_TOOL_NAME = 'skill'
 import type { TodoList } from './todo/types.js'
 import {
   type Task,
@@ -83,7 +85,8 @@ import { getSkillToolCommands, getMcpSkillCommands } from '../commands.js'
 import type { Command } from '../types/command.js'
 import uniqBy from 'lodash-es/uniqBy.js'
 import { getProjectRoot } from '../bootstrap/state.js'
-import { formatCommandsWithinBudget } from '../tools/SkillTool/prompt.js'
+// formatCommandsWithinBudget: tool directory removed; use no-op stub
+function formatCommandsWithinBudget(_commands: unknown[], _contextWindowTokens: number): string { return '' }
 import { getContextWindowForModel } from './context.js'
 import type { DiscoverySignal } from '../services/skillSearch/signals.js'
 // Conditional require for DCE. All skill-search string literals that would
@@ -199,9 +202,7 @@ import { feature } from 'bun:bundle'
 /* eslint-disable @typescript-eslint/no-require-imports */
 const BRIEF_TOOL_NAME: string | null =
   feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).BRIEF_TOOL_NAME
+    ? 'brief'
     : null
 const sessionTranscriptModule = feature('KAIROS')
   ? (require('../services/sessionTranscript/sessionTranscript.js') as typeof import('../services/sessionTranscript/sessionTranscript.js'))

@@ -4,8 +4,13 @@ import { logError } from 'src/utils/log.js';
 import { getOriginalCwd } from '../../../bootstrap/state.js';
 import { Box, Text } from '../../../ink.js';
 import { sanitizeToolNameForAnalytics } from '../../../services/analytics/metadata.js';
-import { SKILL_TOOL_NAME } from '../../../tools/SkillTool/constants.js';
-import { SkillTool } from '../../../tools/SkillTool/SkillTool.js';
+// SkillTool directory deleted — inline constant and stub
+const SKILL_TOOL_NAME = 'skill';
+const SkillTool = {
+  inputSchema: {
+    safeParse: (_input: unknown) => ({ success: false as const, data: undefined, error: { message: 'SkillTool deleted' } })
+  }
+} as any;
 import { env } from '../../../utils/env.js';
 import { shouldShowAlwaysAllowOptions } from '../../../utils/permissions/permissionsLoader.js';
 import { logUnaryEvent } from '../../../utils/unaryLogging.js';

@@ -125,20 +125,11 @@ export function clearSessionCaches(
   clearTrackedMagicDocs()
   // Clear session environment variables
   clearSessionEnvVars()
-  // Clear WebFetch URL cache (up to 50MB of cached page content)
-  void import('../../tools/WebFetchTool/utils.js').then(
-    ({ clearWebFetchCache }) => clearWebFetchCache(),
-  )
-  // Clear ToolSearch description cache (full tool prompts, ~500KB for 50 MCP tools)
-  void import('../../tools/ToolSearchTool/ToolSearchTool.js').then(
-    ({ clearToolSearchDescriptionCache }) => clearToolSearchDescriptionCache(),
-  )
+  // Clear WebFetch URL cache — WebFetchTool directory removed; skip
+  // Clear ToolSearch description cache — ToolSearchTool directory removed; skip
   // Clear agent definitions cache (accumulates per-cwd via EnterWorktreeTool)
   void import('../../tools/AgentTool/loadAgentsDir.js').then(
     ({ clearAgentDefinitionsCache }) => clearAgentDefinitionsCache(),
   )
-  // Clear SkillTool prompt cache (accumulates per project root)
-  void import('../../tools/SkillTool/prompt.js').then(({ clearPromptCache }) =>
-    clearPromptCache(),
-  )
+  // Clear SkillTool prompt cache — SkillTool directory removed; skip
 }

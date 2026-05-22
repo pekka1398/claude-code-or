@@ -14,7 +14,6 @@ import {
 import { FILE_WRITE_TOOL_NAME } from '../tools/FileWriteTool/prompt.js'
 import { FILE_READ_TOOL_NAME } from '../tools/FileReadTool/prompt.js'
 import { FILE_EDIT_TOOL_NAME } from '../tools/FileEditTool/constants.js'
-import { TODO_WRITE_TOOL_NAME } from '../tools/TodoWriteTool/constants.js'
 import { TASK_CREATE_TOOL_NAME } from '../tools/TaskCreateTool/constants.js'
 import type { Tools } from '../Tool.js'
 import type { Command } from '../types/command.js'
@@ -24,16 +23,12 @@ import {
   getMarketingNameForModel,
 } from '../utils/model/model.js'
 import { getSkillToolCommands } from 'src/commands.js'
-import { SKILL_TOOL_NAME } from '../tools/SkillTool/constants.js'
 import { getOutputStyleConfig } from './outputStyles.js'
 import type {
   MCPServerConnection,
   ConnectedMCPServer,
 } from '../services/mcp/types.js'
-import { GLOB_TOOL_NAME } from 'src/tools/GlobTool/prompt.js'
-import { GREP_TOOL_NAME } from 'src/tools/GrepTool/prompt.js'
 import { hasEmbeddedSearchTools } from 'src/utils/embeddedTools.js'
-import { ASK_USER_QUESTION_TOOL_NAME } from '../tools/AskUserQuestionTool/prompt.js'
 import {
   EXPLORE_AGENT,
   EXPLORE_AGENT_MIN_QUERIES,
@@ -77,13 +72,11 @@ const proactiveModule =
     : null
 const BRIEF_PROACTIVE_SECTION: string | null =
   feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).BRIEF_PROACTIVE_SECTION
+    ? null // BriefTool directory deleted; feature() always returns false anyway
     : null
 const briefToolModule =
   feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (require('../tools/BriefTool/BriefTool.js') as typeof import('../tools/BriefTool/BriefTool.js'))
+    ? null // BriefTool directory deleted; feature() always returns false anyway
     : null
 // DiscoverSkillsTool removed — DISCOVER_SKILLS_TOOL_NAME always null (feature('EXPERIMENTAL_SKILL_SEARCH') is false)
 const DISCOVER_SKILLS_TOOL_NAME: string | null = null
@@ -227,7 +220,7 @@ function getSimpleDoingTasksSection(): string {
     `In general, do not propose changes to code you haven't read. If a user asks about or wants you to modify a file, read it first. Understand existing code before suggesting modifications.`,
     `Do not create files unless they're absolutely necessary for achieving your goal. Generally prefer editing an existing file to creating a new one, as this prevents file bloat and builds on existing work more effectively.`,
     `Avoid giving time estimates or predictions for how long tasks will take, whether for your own work or for users planning projects. Focus on what needs to be done, not how long it might take.`,
-    `If an approach fails, diagnose why before switching tactics—read the error, check your assumptions, try a focused fix. Don't retry the identical action blindly, but don't abandon a viable approach after a single failure either. Escalate to the user with ${ASK_USER_QUESTION_TOOL_NAME} only when you're genuinely stuck after investigation, not as a first response to friction.`,
+    `If an approach fails, diagnose why before switching tactics—read the error, check your assumptions, try a focused fix. Don't retry the identical action blindly, but don't abandon a viable approach after a single failure either. Escalate to the user with ${'ask_user_question'} only when you're genuinely stuck after investigation, not as a first response to friction.`,
     `Be careful not to introduce security vulnerabilities such as command injection, XSS, SQL injection, and other OWASP top 10 vulnerabilities. If you notice that you wrote insecure code, immediately fix it. Prioritize writing safe, secure, and correct code.`,
     ...codeStyleSubitems,
     `Avoid backwards-compatibility hacks like renaming unused _vars, re-exporting types, adding // removed comments for removed code, etc. If you are certain that something is unused, you can delete it completely.`,
@@ -264,7 +257,7 @@ When you encounter an obstacle, do not use destructive actions as a shortcut to 
 }
 
 function getUsingYourToolsSection(enabledTools: Set<string>): string {
-  const taskToolName = [TASK_CREATE_TOOL_NAME, TODO_WRITE_TOOL_NAME].find(n =>
+  const taskToolName = [TASK_CREATE_TOOL_NAME, 'todo_write'].find(n =>
     enabledTools.has(n),
   )
 
@@ -292,8 +285,8 @@ function getUsingYourToolsSection(enabledTools: Set<string>): string {
     ...(embedded
       ? []
       : [
-          `To search for files use ${GLOB_TOOL_NAME} instead of find or ls`,
-          `To search the content of files, use ${GREP_TOOL_NAME} instead of grep or rg`,
+          `To search for files use ${'glob'} instead of find or ls`,
+          `To search the content of files, use ${'grep'} instead of grep or rg`,
         ]),
     `Reserve using the ${BASH_TOOL_NAME} exclusively for system commands and terminal operations that require shell execution. If you are unsure and there is a relevant dedicated tool, default to using the dedicated tool and only fallback on using the ${BASH_TOOL_NAME} tool for these if it is absolutely necessary.`,
   ]
@@ -350,17 +343,17 @@ function getSessionSpecificGuidanceSection(
   enabledTools: Set<string>,
   skillToolCommands: Command[],
 ): string | null {
-  const hasAskUserQuestionTool = enabledTools.has(ASK_USER_QUESTION_TOOL_NAME)
+  const hasAskUserQuestionTool = enabledTools.has('ask_user_question')
   const hasSkills =
-    skillToolCommands.length > 0 && enabledTools.has(SKILL_TOOL_NAME)
+    skillToolCommands.length > 0 && enabledTools.has('skill')
   const hasAgentTool = enabledTools.has(AGENT_TOOL_NAME)
   const searchTools = hasEmbeddedSearchTools()
     ? `\`find\` or \`grep\` via the ${BASH_TOOL_NAME} tool`
-    : `the ${GLOB_TOOL_NAME} or ${GREP_TOOL_NAME}`
+    : `the ${'glob'} or ${'grep'}`
 
   const items = [
     hasAskUserQuestionTool
-      ? `If you do not understand why the user has denied a tool call, use the ${ASK_USER_QUESTION_TOOL_NAME} to ask them.`
+      ? `If you do not understand why the user has denied a tool call, use the ${'ask_user_question'} to ask them.`
       : null,
     getIsNonInteractiveSession()
       ? null
@@ -377,7 +370,7 @@ function getSessionSpecificGuidanceSection(
         ]
       : []),
     hasSkills
-      ? `/<skill-name> (e.g., /commit) is shorthand for users to invoke a user-invocable skill. When executed, the skill gets expanded to a full prompt. Use the ${SKILL_TOOL_NAME} tool to execute them. IMPORTANT: Only use ${SKILL_TOOL_NAME} for skills listed in its user-invocable skills section - do not guess or use built-in CLI commands.`
+      ? `/<skill-name> (e.g., /commit) is shorthand for users to invoke a user-invocable skill. When executed, the skill gets expanded to a full prompt. Use the ${'skill'} tool to execute them. IMPORTANT: Only use the ${'skill'} for skills listed in its user-invocable skills section - do not guess or use built-in CLI commands.`
       : null,
     DISCOVER_SKILLS_TOOL_NAME !== null &&
     hasSkills &&

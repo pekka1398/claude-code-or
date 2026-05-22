@@ -41,13 +41,13 @@ import { BASH_TOOL_NAME } from '../../tools/BashTool/toolName.js'
 import { FILE_EDIT_TOOL_NAME } from '../../tools/FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from '../../tools/FileReadTool/prompt.js'
 import { FILE_WRITE_TOOL_NAME } from '../../tools/FileWriteTool/prompt.js'
-import { NOTEBOOK_EDIT_TOOL_NAME } from '../../tools/NotebookEditTool/constants.js'
+// NOTEBOOK_EDIT_TOOL_NAME='notebook_edit' (deleted tool dir — using inline literal)
+const NOTEBOOK_EDIT_TOOL_NAME = 'notebook_edit'
 const POWERSHELL_TOOL_NAME = 'power_shell'
 import { parseGitCommitId } from '../../tools/shared/gitOperationTracking.js'
-import {
-  isDeferredTool,
-  TOOL_SEARCH_TOOL_NAME,
-} from '../../tools/ToolSearchTool/prompt.js'
+// TOOL_SEARCH_TOOL_NAME='tool_search', isDeferredTool removed (deleted tool dir — using inline literal / no-op stub)
+const TOOL_SEARCH_TOOL_NAME = 'tool_search'
+const isDeferredTool = (_tool: any): boolean => false
 import { getAllBaseTools } from '../../tools.js'
 import type { HookProgress } from '../../types/hooks.js'
 import type {

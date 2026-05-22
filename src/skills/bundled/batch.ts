@@ -1,8 +1,9 @@
 import { AGENT_TOOL_NAME } from '../../tools/AgentTool/constants.js'
-import { ASK_USER_QUESTION_TOOL_NAME } from '../../tools/AskUserQuestionTool/prompt.js'
-import { ENTER_PLAN_MODE_TOOL_NAME } from '../../tools/EnterPlanModeTool/constants.js'
-import { EXIT_PLAN_MODE_TOOL_NAME } from '../../tools/ExitPlanModeTool/constants.js'
-import { SKILL_TOOL_NAME } from '../../tools/SkillTool/constants.js'
+// Deleted tool directories: use literal string constants
+const ASK_USER_QUESTION_TOOL_NAME = 'ask_user_question'
+const ENTER_PLAN_MODE_TOOL_NAME = 'enter_plan_mode'
+const EXIT_PLAN_MODE_TOOL_NAME = 'exit_plan_mode'
+const SKILL_TOOL_NAME = 'skill'
 import { getIsGit } from '../../utils/git.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 

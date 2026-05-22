@@ -4,7 +4,8 @@ import { OUTPUT_FILE_TAG, REMOTE_REVIEW_PROGRESS_TAG, REMOTE_REVIEW_TAG, STATUS_
 import type { SDKAssistantMessage, SDKMessage } from '../../entrypoints/agentSdkTypes.js';
 import type { SetAppState, Task, TaskContext, TaskStateBase } from '../../Task.js';
 import { createTaskStateBase, generateTaskId } from '../../Task.js';
-import { TodoWriteTool } from '../../tools/TodoWriteTool/TodoWriteTool.js';
+// TodoWriteTool directory removed; use literal name for matching
+const TODO_WRITE_TOOL_NAME_LITERAL = 'todo_write'
 import { type BackgroundRemoteSessionPrecondition, checkBackgroundRemoteSessionEligibility } from '../../utils/background/remote/remoteSession.js';
 import { logForDebugging } from '../../utils/debug.js';
 import { logError } from '../../utils/log.js';
@@ -370,19 +371,16 @@ Remote review did not produce output (${reason}). Tell the user to retry /ultrar
  * Extract todo list from SDK messages (finds last TodoWrite tool use).
  */
 function extractTodoListFromLog(log: SDKMessage[]): TodoList {
-  const todoListMessage = log.findLast((msg): msg is SDKAssistantMessage => msg.type === 'assistant' && (msg as unknown as SDKMessageWithMessage).message.content.some(block => block.type === 'tool_use' && block.name === TodoWriteTool.name));
+  const todoListMessage = log.findLast((msg): msg is SDKAssistantMessage => msg.type === 'assistant' && (msg as unknown as SDKMessageWithMessage).message.content.some(block => block.type === 'tool_use' && block.name === TODO_WRITE_TOOL_NAME_LITERAL));
   if (!todoListMessage) {
     return [];
   }
-  const input = (todoListMessage as unknown as SDKMessageWithMessage).message.content.find(block => block.type === 'tool_use' && block.name === TodoWriteTool.name)?.input;
+  const input = (todoListMessage as unknown as SDKMessageWithMessage).message.content.find(block => block.type === 'tool_use' && block.name === TODO_WRITE_TOOL_NAME_LITERAL)?.input;
   if (!input) {
     return [];
   }
-  const parsedInput = TodoWriteTool.inputSchema.safeParse(input);
-  if (!parsedInput.success) {
-    return [];
-  }
-  return parsedInput.data.todos;
+  // TodoWriteTool removed — return empty list since we can't parse its schema
+  return [];
 }
 
 /**

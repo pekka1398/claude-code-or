@@ -12,8 +12,12 @@ import type { KeyboardEvent } from '../../../ink/events/keyboard-event.js';
 import { Box, Text } from '../../../ink.js';
 import type { AppState } from '../../../state/AppStateStore.js';
 import { AGENT_TOOL_NAME } from '../../../tools/AgentTool/constants.js';
-import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../../../tools/ExitPlanModeTool/constants.js';
-import type { AllowedPrompt } from '../../../tools/ExitPlanModeTool/ExitPlanModeV2Tool.js';
+// ExitPlanModeTool directory deleted — inline constant and define AllowedPrompt locally
+const EXIT_PLAN_MODE_V2_TOOL_NAME = 'exit_plan_mode';
+interface AllowedPrompt {
+  tool: string;
+  prompt: string;
+}
 const TEAM_CREATE_TOOL_NAME = 'team_create';
 import { isAgentSwarmsEnabled } from '../../../utils/agentSwarmsEnabled.js';
 import { calculateContextPercentages, getContextWindowForModel } from '../../../utils/context.js';

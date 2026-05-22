@@ -1,7 +1,8 @@
 import { BASH_TOOL_NAME } from '../tools/BashTool/toolName.js'
 import { FILE_READ_TOOL_NAME } from '../tools/FileReadTool/prompt.js'
-import { GREP_TOOL_NAME } from '../tools/GrepTool/prompt.js'
-import { WEB_FETCH_TOOL_NAME } from '../tools/WebFetchTool/prompt.js'
+// GREP_TOOL_NAME='grep', WEB_FETCH_TOOL_NAME='web_fetch' (deleted tool dirs — using inline literals)
+const GREP_TOOL_NAME = 'grep'
+const WEB_FETCH_TOOL_NAME = 'web_fetch'
 import type { ContextData } from './analyzeContext.js'
 import { getDisplayPath } from './file.js'
 import { formatTokens } from './format.js'

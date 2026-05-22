@@ -19,7 +19,8 @@ import {
   getActiveAgentsFromList,
   getAgentDefinitionsWithOverrides,
 } from '../tools/AgentTool/loadAgentsDir.js'
-import { TODO_WRITE_TOOL_NAME } from '../tools/TodoWriteTool/constants.js'
+// TODO_WRITE_TOOL_NAME='todo_write' (deleted tool dir — using inline literal)
+const TODO_WRITE_TOOL_NAME = 'todo_write'
 import { asSessionId } from '../types/ids.js'
 import type {
   AttributionSnapshotMessage,

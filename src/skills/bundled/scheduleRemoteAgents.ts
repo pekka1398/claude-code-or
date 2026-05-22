@@ -2,7 +2,8 @@ import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/gr
 import type { MCPServerConnection } from '../../services/mcp/types.js'
 import { isPolicyAllowed } from '../../services/policyLimits/index.js'
 import type { ToolUseContext } from '../../Tool.js'
-import { ASK_USER_QUESTION_TOOL_NAME } from '../../tools/AskUserQuestionTool/prompt.js'
+// AskUserQuestionTool directory removed; use literal string
+const ASK_USER_QUESTION_TOOL_NAME = 'ask_user_question'
 // REMOTE_TRIGGER_TOOL_NAME was imported from deleted '../../tools/RemoteTriggerTool/prompt.js'
 const REMOTE_TRIGGER_TOOL_NAME = 'remote_trigger'
 import { getClaudeAIOAuthTokens } from '../../utils/auth.js'

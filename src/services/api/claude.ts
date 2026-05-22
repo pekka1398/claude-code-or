@@ -200,11 +200,11 @@ import {
 } from 'src/utils/toolSearch.js'
 import { API_MAX_MEDIA_PER_REQUEST } from '../../constants/apiLimits.js'
 import { ADVISOR_BETA_HEADER } from '../../constants/betas.js'
-import {
-  formatDeferredToolLine,
-  isDeferredTool,
-  TOOL_SEARCH_TOOL_NAME,
-} from '../../tools/ToolSearchTool/prompt.js'
+// TOOL_SEARCH_TOOL_NAME='tool_search', formatDeferredToolLine/isDeferredTool removed
+// (deleted tool dir — using inline literal / no-op stubs)
+const TOOL_SEARCH_TOOL_NAME = 'tool_search'
+const formatDeferredToolLine = (_tool: any): string => ''
+const isDeferredTool = (_tool: any): boolean => false
 import { count } from '../../utils/array.js'
 import { insertBlockAfterToolResults } from '../../utils/contentArray.js'
 import { validateBoundedIntEnvVar } from '../../utils/envValidation.js'

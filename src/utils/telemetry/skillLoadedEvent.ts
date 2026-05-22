@@ -4,7 +4,8 @@ import {
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
   logEvent,
 } from '../../services/analytics/index.js'
-import { getCharBudget } from '../../tools/SkillTool/prompt.js'
+// getCharBudget: SkillTool directory removed; use no-op stub
+const getCharBudget = (_contextWindowTokens: number): number => 0
 
 /**
  * Logs a tengu_skill_loaded event for each skill available at session startup.

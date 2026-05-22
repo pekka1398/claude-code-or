@@ -8,7 +8,7 @@ import { useTerminalSize } from '../../../hooks/useTerminalSize.js';
 import { Box, Newline, Text } from '../../../ink.js';
 import { useKeybinding } from '../../../keybindings/useKeybinding.js';
 import { BashTool } from '../../../tools/BashTool/BashTool.js';
-import { WebFetchTool } from '../../../tools/WebFetchTool/WebFetchTool.js';
+// WebFetchTool directory deleted — use inline tool name 'web_fetch'
 import type { PermissionBehavior, PermissionRuleValue } from '../../../utils/permissions/PermissionRule.js';
 import { permissionRuleValueFromString, permissionRuleValueToString } from '../../../utils/permissions/permissionRuleParser.js';
 export type PermissionRuleInputProps = {
@@ -76,7 +76,7 @@ export function PermissionRuleInput(t0) {
   let t6;
   if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
     t5 = <Text bold={true}>{permissionRuleValueToString({
-        toolName: WebFetchTool.name
+        toolName: 'web_fetch'
       })}</Text>;
     t6 = <Text bold={false}> or </Text>;
     $[7] = t5;

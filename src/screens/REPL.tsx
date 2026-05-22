@@ -111,7 +111,8 @@ import { buildPermissionUpdates } from '../components/permissions/ExitPlanModePe
 import { stripDangerousPermissionsForAutoMode } from '../utils/permissions/permissionSetup.js';
 import type { PermissionMode } from '../types/permissions.js';
 import { getScratchpadDir, isScratchpadEnabled } from '../utils/permissions/filesystem.js';
-import { WEB_FETCH_TOOL_NAME } from '../tools/WebFetchTool/prompt.js';
+// WEB_FETCH_TOOL_NAME='web_fetch' (deleted tool dir — using inline literal)
+const WEB_FETCH_TOOL_NAME = 'web_fetch'
 const SLEEP_TOOL_NAME = 'sleep';
 import { clearSpeculativeChecks } from '../tools/BashTool/bashPermissions.js';
 import type { AutoUpdaterResult } from '../utils/autoUpdater.js';

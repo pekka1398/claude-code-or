@@ -5,10 +5,8 @@ import type { ToolUseContext } from '../../Tool.js'
 import { FILE_EDIT_TOOL_NAME } from '../../tools/FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from '../../tools/FileReadTool/prompt.js'
 import { FILE_WRITE_TOOL_NAME } from '../../tools/FileWriteTool/prompt.js'
-import { GLOB_TOOL_NAME } from '../../tools/GlobTool/prompt.js'
-import { GREP_TOOL_NAME } from '../../tools/GrepTool/prompt.js'
-import { WEB_FETCH_TOOL_NAME } from '../../tools/WebFetchTool/prompt.js'
-import { WEB_SEARCH_TOOL_NAME } from '../../tools/WebSearchTool/prompt.js'
+// GLOB_TOOL_NAME='glob', GREP_TOOL_NAME='grep', WEB_FETCH_TOOL_NAME='web_fetch', WEB_SEARCH_TOOL_NAME='web_search'
+// (deleted tool dirs — using inline literals)
 import type { Message } from '../../types/message.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { getMainLoopModel } from '../../utils/model/model.js'
@@ -41,10 +39,10 @@ const IMAGE_MAX_TOKEN_SIZE = 2000
 const COMPACTABLE_TOOLS = new Set<string>([
   FILE_READ_TOOL_NAME,
   ...SHELL_TOOL_NAMES,
-  GREP_TOOL_NAME,
-  GLOB_TOOL_NAME,
-  WEB_SEARCH_TOOL_NAME,
-  WEB_FETCH_TOOL_NAME,
+  'grep',
+  'glob',
+  'web_search',
+  'web_fetch',
   FILE_EDIT_TOOL_NAME,
   FILE_WRITE_TOOL_NAME,
 ])

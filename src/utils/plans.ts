@@ -11,7 +11,8 @@ import type {
   UserMessage,
 } from 'src/types/message.js'
 import { getPlanSlugCache, getSessionId } from '../bootstrap/state.js'
-import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../tools/ExitPlanModeTool/constants.js'
+// EXIT_PLAN_MODE_V2_TOOL_NAME='exit_plan_mode' (deleted tool dir — using inline literal)
+const EXIT_PLAN_MODE_V2_TOOL_NAME = 'exit_plan_mode'
 import { getCwd } from './cwd.js'
 import { logForDebugging } from './debug.js'
 import { getClaudeConfigHomeDir } from './envUtils.js'

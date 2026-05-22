@@ -8,8 +8,21 @@ import { useTheme } from '../../../ink.js';
 import { useKeybindings } from '../../../keybindings/useKeybinding.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from '../../../services/analytics/index.js';
 import { useAppState } from '../../../state/AppState.js';
-import type { Question } from '../../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
-import { AskUserQuestionTool } from '../../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
+// AskUserQuestionTool directory deleted — define local Question type and inputSchema stub
+interface QuestionOption {
+  label: string;
+  preview?: string;
+}
+interface Question {
+  question: string;
+  options: QuestionOption[];
+  multiSelect?: boolean;
+}
+const AskUserQuestionTool = {
+  inputSchema: {
+    safeParse: (_input: unknown) => ({ success: false as const, data: undefined, error: { message: 'AskUserQuestionTool deleted' } })
+  }
+} as any;
 import { type CliHighlight, getCliHighlightPromise } from '../../../utils/cliHighlight.js';
 import type { PastedContent } from '../../../utils/config.js';
 import type { ImageDimensions } from '../../../utils/imageResizer.js';

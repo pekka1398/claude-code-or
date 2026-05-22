@@ -4,7 +4,17 @@ import React, { useCallback, useState } from 'react';
 import type { KeyboardEvent } from '../../../ink/events/keyboard-event.js';
 import { Box, Text } from '../../../ink.js';
 import { useAppState } from '../../../state/AppState.js';
-import type { Question, QuestionOption } from '../../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
+// AskUserQuestionTool directory deleted — define local Question types
+interface QuestionOption {
+  label: string;
+  preview?: string;
+}
+interface Question {
+  question: string;
+  options: QuestionOption[];
+  multiSelect?: boolean;
+}
+export type { Question, QuestionOption };
 import type { PastedContent } from '../../../utils/config.js';
 import { getExternalEditor } from '../../../utils/editor.js';
 import { toIDEDisplayName } from '../../../utils/ide.js';

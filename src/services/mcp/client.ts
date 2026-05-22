@@ -50,13 +50,15 @@ import {
   type ToolCallProgress,
   toolMatchesName,
 } from '../../Tool.js'
-import { ListMcpResourcesTool } from '../../tools/ListMcpResourcesTool/ListMcpResourcesTool.js'
+// ListMcpResourcesTool directory removed — stub below
+const ListMcpResourcesTool = null as any
 import { type MCPProgress, MCPTool } from '../../tools/MCPTool/MCPTool.js'
 // createMcpAuthTool removed — McpAuthTool directory deleted. Stub returns a placeholder tool.
 function createMcpAuthTool(_name: string, _config: any): any {
   return { name: 'mcp_auth', description: 'MCP auth (not available)', inputSchema: {} }
 }
-import { ReadMcpResourceTool } from '../../tools/ReadMcpResourceTool/ReadMcpResourceTool.js'
+// ReadMcpResourceTool directory removed — stub below
+const ReadMcpResourceTool = null as any
 import { createAbortController } from '../../utils/abortController.js'
 import { count } from '../../utils/array.js'
 import {

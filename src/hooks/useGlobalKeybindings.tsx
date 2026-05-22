@@ -94,17 +94,8 @@ export function GlobalKeybindingHandlers({
   useAppState(s_0 => s_0.isBriefOnly) : false;
   const handleToggleTranscript = useCallback(() => {
     if (feature('KAIROS') || feature('KAIROS_BRIEF')) {
-      // Escape hatch: GB kill-switch while defaultView=chat was persisted
-      // can leave isBriefOnly stuck on, showing a blank filterForBriefTool
-      // view. Users will reach for ctrl+o — clear the stuck state first.
-      // Only needed in the prompt screen — transcript mode already ignores
-      // isBriefOnly (Messages.tsx filter is gated on !isTranscriptMode).
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const {
-        isBriefEnabled
-      } = require('../tools/BriefTool/BriefTool.js') as typeof import('../tools/BriefTool/BriefTool.js');
-      /* eslint-enable @typescript-eslint/no-require-imports */
-      if (!isBriefEnabled() && isBriefOnly && screen !== 'transcript') {
+      // Escape hatch: if isBriefOnly is stuck on (tool removed), clear it.
+      if (isBriefOnly && screen !== 'transcript') {
         setAppState(prev_0 => {
           if (!prev_0.isBriefOnly) return prev_0;
           return {
@@ -159,25 +150,8 @@ export function GlobalKeybindingHandlers({
   // out even if the GB kill-switch fires mid-session.
   const handleToggleBrief = useCallback(() => {
     if (feature('KAIROS') || feature('KAIROS_BRIEF')) {
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const {
-        isBriefEnabled: isBriefEnabled_0
-      } = require('../tools/BriefTool/BriefTool.js') as typeof import('../tools/BriefTool/BriefTool.js');
-      /* eslint-enable @typescript-eslint/no-require-imports */
-      if (!isBriefEnabled_0() && !isBriefOnly) return;
-      const next = !isBriefOnly;
-      logEvent('tengu_brief_mode_toggled', {
-        enabled: next,
-        gated: false,
-        source: 'keybinding' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-      });
-      setAppState(prev_2 => {
-        if (prev_2.isBriefOnly === next) return prev_2;
-        return {
-          ...prev_2,
-          isBriefOnly: next
-        };
-      });
+      // BriefTool removed — brief toggle is a no-op
+      return;
     }
   }, [isBriefOnly, setAppState]);
 

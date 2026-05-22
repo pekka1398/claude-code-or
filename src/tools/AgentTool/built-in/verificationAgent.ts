@@ -1,9 +1,10 @@
 import { BASH_TOOL_NAME } from 'src/tools/BashTool/toolName.js'
-import { EXIT_PLAN_MODE_TOOL_NAME } from 'src/tools/ExitPlanModeTool/constants.js'
+// Deleted tool directories: use literal string constants
+const EXIT_PLAN_MODE_TOOL_NAME = 'exit_plan_mode'
 import { FILE_EDIT_TOOL_NAME } from 'src/tools/FileEditTool/constants.js'
 import { FILE_WRITE_TOOL_NAME } from 'src/tools/FileWriteTool/prompt.js'
-import { NOTEBOOK_EDIT_TOOL_NAME } from 'src/tools/NotebookEditTool/constants.js'
-import { WEB_FETCH_TOOL_NAME } from 'src/tools/WebFetchTool/prompt.js'
+const NOTEBOOK_EDIT_TOOL_NAME = 'notebook_edit'
+const WEB_FETCH_TOOL_NAME = 'web_fetch'
 import { AGENT_TOOL_NAME } from '../constants.js'
 import type { BuiltInAgentDefinition } from '../loadAgentsDir.js'
 

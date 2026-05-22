@@ -13,7 +13,8 @@ import {
   detectGitOperation,
   type PrAction,
 } from '../tools/shared/gitOperationTracking.js'
-import { TOOL_SEARCH_TOOL_NAME } from '../tools/ToolSearchTool/prompt.js'
+// TOOL_SEARCH_TOOL_NAME='tool_search' (deleted tool dir — using inline literal)
+const TOOL_SEARCH_TOOL_NAME = 'tool_search'
 import type {
   CollapsedReadSearchGroup,
   CollapsibleMessage,

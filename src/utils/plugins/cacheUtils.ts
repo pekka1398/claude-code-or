@@ -3,7 +3,8 @@ import { join } from 'path'
 import { clearCommandsCache } from '../../commands.js'
 import { clearAllOutputStylesCache } from '../../constants/outputStyles.js'
 import { clearAgentDefinitionsCache } from '../../tools/AgentTool/loadAgentsDir.js'
-import { clearPromptCache } from '../../tools/SkillTool/prompt.js'
+// clearPromptCache: SkillTool directory removed; use no-op stub
+const clearPromptCache = (): void => {}
 import { resetSentSkillNames } from '../attachments.js'
 import { logForDebugging } from '../debug.js'
 import { getErrnoCode } from '../errors.js'

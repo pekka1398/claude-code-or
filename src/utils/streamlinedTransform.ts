@@ -13,13 +13,17 @@ import type { StdoutMessage } from 'src/entrypoints/sdk/controlTypes.js'
 import { FILE_EDIT_TOOL_NAME } from 'src/tools/FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from 'src/tools/FileReadTool/prompt.js'
 import { FILE_WRITE_TOOL_NAME } from 'src/tools/FileWriteTool/prompt.js'
-import { GLOB_TOOL_NAME } from 'src/tools/GlobTool/prompt.js'
-import { GREP_TOOL_NAME } from 'src/tools/GrepTool/prompt.js'
-import { LIST_MCP_RESOURCES_TOOL_NAME } from 'src/tools/ListMcpResourcesTool/prompt.js'
+// GLOB_TOOL_NAME='glob', GREP_TOOL_NAME='grep', LIST_MCP_RESOURCES_TOOL_NAME='list_mcp_resources'
+// (deleted tool dirs — using inline literals)
+const GLOB_TOOL_NAME = 'glob'
+const GREP_TOOL_NAME = 'grep'
+const LIST_MCP_RESOURCES_TOOL_NAME = 'list_mcp_resources'
 // LSP_TOOL_NAME: tool directory removed; use literal string for categorization
-import { NOTEBOOK_EDIT_TOOL_NAME } from 'src/tools/NotebookEditTool/constants.js'
+// NOTEBOOK_EDIT_TOOL_NAME='notebook_edit' (deleted tool dir — using inline literal)
+const NOTEBOOK_EDIT_TOOL_NAME = 'notebook_edit'
 import { TASK_STOP_TOOL_NAME } from 'src/tools/TaskStopTool/prompt.js'
-import { WEB_SEARCH_TOOL_NAME } from 'src/tools/WebSearchTool/prompt.js'
+// WEB_SEARCH_TOOL_NAME='web_search' (deleted tool dir — using inline literal)
+const WEB_SEARCH_TOOL_NAME = 'web_search'
 import { extractTextContent } from 'src/utils/messages.js'
 import { SHELL_TOOL_NAMES } from 'src/utils/shell/shellToolUtils.js'
 import { capitalize } from 'src/utils/stringUtils.js'

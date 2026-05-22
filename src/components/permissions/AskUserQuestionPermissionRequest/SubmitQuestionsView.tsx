@@ -2,7 +2,8 @@ import { c as _c } from "react/compiler-runtime";
 import figures from 'figures';
 import React from 'react';
 import { Box, Text } from '../../../ink.js';
-import type { Question } from '../../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
+// AskUserQuestionTool directory deleted — import Question from local definition
+import type { Question } from './QuestionView.js';
 import type { PermissionDecision } from '../../../utils/permissions/PermissionResult.js';
 import { Select } from '../../CustomSelect/index.js';
 import { Divider } from '../../design-system/Divider.js';

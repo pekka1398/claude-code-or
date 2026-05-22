@@ -7,21 +7,14 @@ import type { Tool, Tools } from 'src/Tool.js';
 import { filterToolsForAgent } from 'src/tools/AgentTool/agentToolUtils.js';
 import { AGENT_TOOL_NAME } from 'src/tools/AgentTool/constants.js';
 import { BashTool } from 'src/tools/BashTool/BashTool.js';
-import { ExitPlanModeV2Tool } from 'src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.js';
 import { FileEditTool } from 'src/tools/FileEditTool/FileEditTool.js';
 import { FileReadTool } from 'src/tools/FileReadTool/FileReadTool.js';
 import { FileWriteTool } from 'src/tools/FileWriteTool/FileWriteTool.js';
-import { GlobTool } from 'src/tools/GlobTool/GlobTool.js';
-import { GrepTool } from 'src/tools/GrepTool/GrepTool.js';
-import { ListMcpResourcesTool } from 'src/tools/ListMcpResourcesTool/ListMcpResourcesTool.js';
-import { NotebookEditTool } from 'src/tools/NotebookEditTool/NotebookEditTool.js';
-import { ReadMcpResourceTool } from 'src/tools/ReadMcpResourceTool/ReadMcpResourceTool.js';
 import { TaskOutputTool } from 'src/tools/TaskOutputTool/TaskOutputTool.js';
 import { TaskStopTool } from 'src/tools/TaskStopTool/TaskStopTool.js';
-import { TodoWriteTool } from 'src/tools/TodoWriteTool/TodoWriteTool.js';
-
-import { WebFetchTool } from 'src/tools/WebFetchTool/WebFetchTool.js';
-import { WebSearchTool } from 'src/tools/WebSearchTool/WebSearchTool.js';
+// Deleted tool imports removed: ExitPlanModeV2Tool, GlobTool, GrepTool,
+// ListMcpResourcesTool, NotebookEditTool, ReadMcpResourceTool, TodoWriteTool,
+// WebFetchTool, WebSearchTool
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
 import { Box, Text } from '../../ink.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
@@ -50,11 +43,11 @@ function getToolBuckets(): ToolBuckets {
   return {
     READ_ONLY: {
       name: 'Read-only tools',
-      toolNames: new Set([GlobTool.name, GrepTool.name, ExitPlanModeV2Tool.name, FileReadTool.name, WebFetchTool.name, TodoWriteTool.name, WebSearchTool.name, TaskStopTool.name, TaskOutputTool.name, ListMcpResourcesTool.name, ReadMcpResourceTool.name])
+      toolNames: new Set(['glob', 'grep', 'exit_plan_mode', FileReadTool.name, 'web_fetch', 'todo_write', 'web_search', TaskStopTool.name, TaskOutputTool.name, 'list_mcp_resources', 'read_mcp_resource'])
     },
     EDIT: {
       name: 'Edit tools',
-      toolNames: new Set([FileEditTool.name, FileWriteTool.name, NotebookEditTool.name])
+      toolNames: new Set([FileEditTool.name, FileWriteTool.name, 'notebook_edit'])
     },
     EXECUTION: {
       name: 'Execution tools',

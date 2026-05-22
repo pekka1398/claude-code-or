@@ -107,17 +107,20 @@ import { EXPLORE_AGENT } from 'src/tools/AgentTool/built-in/exploreAgent.js'
 import { PLAN_AGENT } from 'src/tools/AgentTool/built-in/planAgent.js'
 import { areExplorePlanAgentsEnabled } from 'src/tools/AgentTool/builtInAgents.js'
 import { AGENT_TOOL_NAME } from 'src/tools/AgentTool/constants.js'
-import { ASK_USER_QUESTION_TOOL_NAME } from 'src/tools/AskUserQuestionTool/prompt.js'
+// ASK_USER_QUESTION_TOOL_NAME='ask_user_question' (deleted tool dir — using inline literal)
+const ASK_USER_QUESTION_TOOL_NAME = 'ask_user_question'
 import { BashTool } from 'src/tools/BashTool/BashTool.js'
-import { ExitPlanModeV2Tool } from 'src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.js'
+// ExitPlanModeV2Tool directory removed — stub with .name property for template strings
+const ExitPlanModeV2Tool = { name: 'exit_plan_mode' } as any
 import { FileEditTool } from 'src/tools/FileEditTool/FileEditTool.js'
 import {
   FILE_READ_TOOL_NAME,
   MAX_LINES_TO_READ,
 } from 'src/tools/FileReadTool/prompt.js'
 import { FileWriteTool } from 'src/tools/FileWriteTool/FileWriteTool.js'
-import { GLOB_TOOL_NAME } from 'src/tools/GlobTool/prompt.js'
-import { GREP_TOOL_NAME } from 'src/tools/GrepTool/prompt.js'
+// GLOB_TOOL_NAME='glob', GREP_TOOL_NAME='grep' (deleted tool dirs — using inline literals)
+const GLOB_TOOL_NAME = 'glob'
+const GREP_TOOL_NAME = 'grep'
 import type { DeepImmutable } from 'src/types/utils.js'
 import { getStrictToolResultPairing } from '../bootstrap/state.js'
 import type { SpinnerMode } from '../components/Spinner.js'

@@ -16,14 +16,12 @@ import type { Tool } from '../Tool.js'
 import {
   type ToolPermissionContext,
   type Tools,
-  toolMatchesName,
 } from '../Tool.js'
 import type { AgentDefinition } from '../tools/AgentTool/loadAgentsDir.js'
-import {
-  formatDeferredToolLine,
-  isDeferredTool,
-  TOOL_SEARCH_TOOL_NAME,
-} from '../tools/ToolSearchTool/prompt.js'
+// ToolSearchTool directory removed; use literal and no-op stubs
+const TOOL_SEARCH_TOOL_NAME = 'tool_search'
+const isDeferredTool = (_tool: unknown): boolean => false
+const formatDeferredToolLine = (_tool: unknown): string => ''
 import type { Message } from '../types/message.js'
 import {
   countToolDefinitionTokens,
@@ -265,72 +263,21 @@ export function modelSupportsToolReference(model: string): boolean {
  * For the definitive check that includes model support and threshold,
  * use isToolSearchEnabled().
  */
-let loggedOptimistic = false
 
 export function isToolSearchEnabledOptimistic(): boolean {
-  const mode = getToolSearchMode()
-  if (mode === 'standard') {
-    if (!loggedOptimistic) {
-      loggedOptimistic = true
-      logForDebugging(
-        `[ToolSearch:optimistic] mode=${mode}, ENABLE_TOOL_SEARCH=${process.env.ENABLE_TOOL_SEARCH}, result=false`,
-      )
-    }
-    return false
-  }
-
-  // tool_reference is a beta content type that third-party API gateways
-  // (ANTHROPIC_BASE_URL proxies) typically don't support. When the provider
-  // is 'firstParty' but the base URL points elsewhere, the proxy will reject
-  // tool_reference blocks with a 400. Vertex/Bedrock/Foundry are unaffected —
-  // they have their own endpoints and beta headers.
-  // https://github.com/anthropics/claude-code/issues/30912
-  //
-  // HOWEVER: some proxies DO support tool_reference (LiteLLM passthrough,
-  // Cloudflare AI Gateway, corp gateways that forward beta headers). The
-  // blanket disable breaks defer_loading for those users — all MCP tools
-  // loaded into main context instead of on-demand (gh-31936 / CC-457,
-  // likely the real cause of CC-330 "v2.1.70 defer_loading regression").
-  // This gate only applies when ENABLE_TOOL_SEARCH is unset/empty (default
-  // behavior). Setting any non-empty value — 'true', 'auto', 'auto:N' —
-  // means the user is explicitly configuring tool search and asserts their
-  // setup supports it. The falsy check (rather than === undefined) aligns
-  // with getToolSearchMode(), which also treats "" as unset.
-  if (
-    !process.env.ENABLE_TOOL_SEARCH &&
-    getAPIProvider() === 'firstParty' &&
-    !isFirstPartyAnthropicBaseUrl()
-  ) {
-    if (!loggedOptimistic) {
-      loggedOptimistic = true
-      logForDebugging(
-        `[ToolSearch:optimistic] disabled: ANTHROPIC_BASE_URL=${process.env.ANTHROPIC_BASE_URL} is not a first-party Anthropic host. Set ENABLE_TOOL_SEARCH=true (or auto / auto:N) if your proxy forwards tool_reference blocks.`,
-      )
-    }
-    return false
-  }
-
-  if (!loggedOptimistic) {
-    loggedOptimistic = true
-    logForDebugging(
-      `[ToolSearch:optimistic] mode=${mode}, ENABLE_TOOL_SEARCH=${process.env.ENABLE_TOOL_SEARCH}, result=true`,
-    )
-  }
-  return true
+  // ToolSearchTool directory removed — always return false since we only
+  // have 12 built-in tools and no MCP tool search is needed.
+  return false
 }
 
 /**
  * Check if ToolSearchTool is available in the provided tools list.
- * If ToolSearchTool is not available (e.g., disallowed via disallowedTools),
- * tool search cannot function and should be disabled.
- *
- * @param tools Array of tools with a 'name' property
- * @returns true if ToolSearchTool is in the tools list, false otherwise
+ * Always returns false since ToolSearchTool directory was removed.
  */
 export function isToolSearchToolAvailable(
-  tools: readonly { name: string }[],
+  _tools: readonly { name: string }[],
 ): boolean {
-  return tools.some(tool => toolMatchesName(tool, TOOL_SEARCH_TOOL_NAME))
+  return false
 }
 
 /**

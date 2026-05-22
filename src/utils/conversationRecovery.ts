@@ -54,15 +54,11 @@ import type { ContentReplacementRecord } from './toolResultStorage.js'
 /* eslint-disable @typescript-eslint/no-require-imports */
 const BRIEF_TOOL_NAME: string | null =
   feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).BRIEF_TOOL_NAME
+    ? 'brief'
     : null
 const LEGACY_BRIEF_TOOL_NAME: string | null =
   feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? (
-        require('../tools/BriefTool/prompt.js') as typeof import('../tools/BriefTool/prompt.js')
-      ).LEGACY_BRIEF_TOOL_NAME
+    ? 'send_user_message'
     : null
 // SEND_USER_FILE_TOOL_NAME: tool directory removed; use literal string
 const SEND_USER_FILE_TOOL_NAME: string | null = feature('KAIROS')

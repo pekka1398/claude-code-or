@@ -9,7 +9,8 @@ import type {
   ToolUseBlock,
 } from '@anthropic-ai/sdk/resources'
 import type { SDKMessage } from '../../entrypoints/agentSdkTypes.js'
-import { EXIT_PLAN_MODE_V2_TOOL_NAME } from '../../tools/ExitPlanModeTool/constants.js'
+// ExitPlanModeTool directory removed; use literal string
+const EXIT_PLAN_MODE_V2_TOOL_NAME = 'exit_plan_mode'
 import { logForDebugging } from '../debug.js'
 import { sleep } from '../sleep.js'
 import { isTransientNetworkError } from '../teleport/api.js'

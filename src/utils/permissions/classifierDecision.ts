@@ -1,11 +1,14 @@
 import { feature } from 'bun:bundle'
-import { ASK_USER_QUESTION_TOOL_NAME } from '../../tools/AskUserQuestionTool/prompt.js'
-import { ENTER_PLAN_MODE_TOOL_NAME } from '../../tools/EnterPlanModeTool/constants.js'
-import { EXIT_PLAN_MODE_TOOL_NAME } from '../../tools/ExitPlanModeTool/constants.js'
+// ASK_USER_QUESTION_TOOL_NAME='ask_user_question' (deleted tool dir — using inline literal)
+const ASK_USER_QUESTION_TOOL_NAME = 'ask_user_question'
+// ENTER_PLAN_MODE_TOOL_NAME='enter_plan_mode', EXIT_PLAN_MODE_TOOL_NAME='exit_plan_mode' (deleted tool dirs — using inline literals)
+const ENTER_PLAN_MODE_TOOL_NAME = 'enter_plan_mode'
+const EXIT_PLAN_MODE_TOOL_NAME = 'exit_plan_mode'
 import { FILE_READ_TOOL_NAME } from '../../tools/FileReadTool/prompt.js'
-import { GLOB_TOOL_NAME } from '../../tools/GlobTool/prompt.js'
-import { GREP_TOOL_NAME } from '../../tools/GrepTool/prompt.js'
-import { LIST_MCP_RESOURCES_TOOL_NAME } from '../../tools/ListMcpResourcesTool/prompt.js'
+// GLOB_TOOL_NAME='glob', GREP_TOOL_NAME='grep', LIST_MCP_RESOURCES_TOOL_NAME='list_mcp_resources' (deleted tool dirs — using inline literals)
+const GLOB_TOOL_NAME = 'glob'
+const GREP_TOOL_NAME = 'grep'
+const LIST_MCP_RESOURCES_TOOL_NAME = 'list_mcp_resources'
 // LSP_TOOL_NAME: tool directory removed; use literal string 'lsp'
 const LSP_TOOL_NAME = 'lsp'
 import { SEND_MESSAGE_TOOL_NAME } from '../../tools/SendMessageTool/constants.js'
@@ -21,8 +24,9 @@ import { TASK_UPDATE_TOOL_NAME } from '../../tools/TaskUpdateTool/constants.js'
 const TEAM_CREATE_TOOL_NAME = 'team_create'
 // TEAM_DELETE_TOOL_NAME: tool directory removed; use literal string 'team_delete'
 const TEAM_DELETE_TOOL_NAME = 'team_delete'
-import { TODO_WRITE_TOOL_NAME } from '../../tools/TodoWriteTool/constants.js'
-import { TOOL_SEARCH_TOOL_NAME } from '../../tools/ToolSearchTool/prompt.js'
+// TODO_WRITE_TOOL_NAME='todo_write', TOOL_SEARCH_TOOL_NAME='tool_search' (deleted tool dirs — using inline literals)
+const TODO_WRITE_TOOL_NAME = 'todo_write'
+const TOOL_SEARCH_TOOL_NAME = 'tool_search'
 import { YOLO_CLASSIFIER_TOOL_NAME } from './yoloClassifier.js'
 
 // Ant-only tool names: directories removed; use literal strings.

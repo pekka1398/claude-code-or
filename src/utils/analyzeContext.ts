@@ -33,11 +33,11 @@ import type {
   AgentDefinition,
   AgentDefinitionsResult,
 } from '../tools/AgentTool/loadAgentsDir.js'
-import { SKILL_TOOL_NAME } from '../tools/SkillTool/constants.js'
-import {
-  getLimitedSkillToolCommands,
-  getSkillToolInfo as getSlashCommandInfo,
-} from '../tools/SkillTool/prompt.js'
+// SKILL_TOOL_NAME: tool directory removed; use literal string
+const SKILL_TOOL_NAME = 'skill'
+// SkillTool directory removed; stub these imports
+const getLimitedSkillToolCommands = async (_cwd: string): Promise<never[]> => []
+const getSlashCommandInfo = async (_cwd: string): Promise<{ totalCommands: number; includedCommands: number; tokens: number }> => ({ totalCommands: 0, includedCommands: 0, tokens: 0 })
 import type {
   AssistantMessage,
   AttachmentMessage,
@@ -384,7 +384,8 @@ async function countBuiltInToolTokens(
 
   // Check if tool search is enabled
   const { isToolSearchEnabled } = await import('./toolSearch.js')
-  const { isDeferredTool } = await import('../tools/ToolSearchTool/prompt.js')
+  // ToolSearchTool directory removed; isDeferredTool always returns false
+  const isDeferredTool = (_tool: unknown) => false
   const isDeferred = await isToolSearchEnabled(
     model ?? '',
     tools,
@@ -413,9 +414,8 @@ async function countBuiltInToolTokens(
   // SkillTool since its tokens are shown in the separate Skills category.
   let systemToolDetails: SystemToolDetail[] = []
   if (process.env.USER_TYPE === 'ant') {
-    const toolsForBreakdown = alwaysLoadedTools.filter(
-      t => !toolMatchesName(t, SKILL_TOOL_NAME),
-    )
+    // SkillTool removed — no need to filter it from breakdown
+    const toolsForBreakdown = alwaysLoadedTools
     if (toolsForBreakdown.length > 0) {
       const estimates = toolsForBreakdown.map(t =>
         roughTokenCountEstimation(jsonStringify(t.inputSchema ?? {})),
@@ -668,7 +668,8 @@ export async function countMcpToolTokens(
   // Check if tool search is enabled - if so, MCP tools are deferred
   // isToolSearchEnabled handles threshold calculation internally for TstAuto mode
   const { isToolSearchEnabled } = await import('./toolSearch.js')
-  const { isDeferredTool } = await import('../tools/ToolSearchTool/prompt.js')
+  // ToolSearchTool directory removed; isDeferredTool always returns false
+  const isDeferredTool = (_tool: unknown) => false
 
   const isDeferred = await isToolSearchEnabled(
     model,

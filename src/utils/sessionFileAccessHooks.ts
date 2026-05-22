@@ -16,10 +16,13 @@ import { FileReadTool } from '../tools/FileReadTool/FileReadTool.js'
 import { FILE_READ_TOOL_NAME } from '../tools/FileReadTool/prompt.js'
 import { FileWriteTool } from '../tools/FileWriteTool/FileWriteTool.js'
 import { FILE_WRITE_TOOL_NAME } from '../tools/FileWriteTool/prompt.js'
-import { GlobTool } from '../tools/GlobTool/GlobTool.js'
-import { GLOB_TOOL_NAME } from '../tools/GlobTool/prompt.js'
-import { GrepTool } from '../tools/GrepTool/GrepTool.js'
-import { GREP_TOOL_NAME } from '../tools/GrepTool/prompt.js'
+// GlobTool, GrepTool directories removed — using no-op stubs and inline literals
+// GLOB_TOOL_NAME='glob', GREP_TOOL_NAME='grep'
+const GLOB_TOOL_NAME = 'glob'
+const GREP_TOOL_NAME = 'grep'
+// Stubs for tool class usage (inputSchema.safeParse) — always fail validation so tool calls fall through
+const GlobTool = { inputSchema: { safeParse: () => ({ success: false }) } } as any
+const GrepTool = { inputSchema: { safeParse: () => ({ success: false }) } } as any
 import type { HookCallback } from '../types/hooks.js'
 import {
   detectSessionFileType,

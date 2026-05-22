@@ -1,22 +1,15 @@
 import { c as _c } from "react/compiler-runtime";
 import { feature } from 'bun:bundle';
 import * as React from 'react';
-import { EnterPlanModeTool } from 'src/tools/EnterPlanModeTool/EnterPlanModeTool.js';
-import { ExitPlanModeV2Tool } from 'src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.js';
+// Deleted tool imports removed: EnterPlanModeTool, ExitPlanModeV2Tool,
+// AskUserQuestionTool, GlobTool, GrepTool, NotebookEditTool, SkillTool, WebFetchTool
 import { useNotifyAfterTimeout } from '../../hooks/useNotifyAfterTimeout.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
 import type { AnyObject, Tool, ToolUseContext } from '../../Tool.js';
-import { AskUserQuestionTool } from '../../tools/AskUserQuestionTool/AskUserQuestionTool.js';
 import { BashTool } from '../../tools/BashTool/BashTool.js';
 import { FileEditTool } from '../../tools/FileEditTool/FileEditTool.js';
 import { FileReadTool } from '../../tools/FileReadTool/FileReadTool.js';
 import { FileWriteTool } from '../../tools/FileWriteTool/FileWriteTool.js';
-import { GlobTool } from '../../tools/GlobTool/GlobTool.js';
-import { GrepTool } from '../../tools/GrepTool/GrepTool.js';
-import { NotebookEditTool } from '../../tools/NotebookEditTool/NotebookEditTool.js';
-// PowerShellTool import removed — directory deleted
-import { SkillTool } from '../../tools/SkillTool/SkillTool.js';
-import { WebFetchTool } from '../../tools/WebFetchTool/WebFetchTool.js';
 import type { AssistantMessage } from '../../types/message.js';
 import type { PermissionDecision } from '../../utils/permissions/PermissionResult.js';
 import { AskUserQuestionPermissionRequest } from './AskUserQuestionPermissionRequest/AskUserQuestionPermissionRequest.js';
@@ -46,31 +39,31 @@ import type { z } from 'zod/v4';
 import type { PermissionUpdate } from '../../utils/permissions/PermissionUpdateSchema.js';
 import type { WorkerBadgeProps } from './WorkerBadge.js';
 function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionRequestProps> {
-  switch (tool) {
-    case FileEditTool:
+  switch (tool.name) {
+    case FileEditTool.name:
       return FileEditPermissionRequest;
-    case FileWriteTool:
+    case FileWriteTool.name:
       return FileWritePermissionRequest;
-    case BashTool:
+    case BashTool.name:
       return BashPermissionRequest;
     // PowerShellTool removed — PowerShellPermissionRequest never reached via this switch
     // ReviewArtifactTool removed — case unreachable
-    case WebFetchTool:
+    case 'web_fetch':
       return WebFetchPermissionRequest;
-    case NotebookEditTool:
+    case 'notebook_edit':
       return NotebookEditPermissionRequest;
-    case ExitPlanModeV2Tool:
+    case 'exit_plan_mode':
       return ExitPlanModePermissionRequest;
-    case EnterPlanModeTool:
+    case 'enter_plan_mode':
       return EnterPlanModePermissionRequest;
-    case SkillTool:
+    case 'skill':
       return SkillPermissionRequest;
-    case AskUserQuestionTool:
+    case 'ask_user_question':
       return AskUserQuestionPermissionRequest;
     // WorkflowTool and MonitorTool removed — cases unreachable
-    case GlobTool:
-    case GrepTool:
-    case FileReadTool:
+    case 'glob':
+    case 'grep':
+    case FileReadTool.name:
       return FilesystemPermissionRequest;
     default:
       return FallbackPermissionRequest;
@@ -123,14 +116,14 @@ export type ToolUseConfirm<Input extends AnyObject = AnyObject> = {
 };
 function getNotificationMessage(toolUseConfirm: ToolUseConfirm): string {
   const toolName = toolUseConfirm.tool.userFacingName(toolUseConfirm.input as never);
-  if (toolUseConfirm.tool === ExitPlanModeV2Tool) {
+  if (toolUseConfirm.tool.name === 'exit_plan_mode') {
     return 'Claude Code needs your approval for the plan';
   }
-  if (toolUseConfirm.tool === EnterPlanModeTool) {
+  if (toolUseConfirm.tool.name === 'enter_plan_mode') {
     return 'Claude Code wants to enter plan mode';
   }
   // ReviewArtifactTool removed — this check is dead code (feature always false)
-  if (feature('REVIEW_ARTIFACT') && toolUseConfirm.tool === ReviewArtifactTool) {
+  if (feature('REVIEW_ARTIFACT') && toolUseConfirm.tool.name === 'review_artifact') {
     return 'Claude needs your approval for a review artifact';
   }
   if (!toolName || toolName.trim() === '') {

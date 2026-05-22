@@ -19,7 +19,8 @@ import {
   FILE_READ_TOOL_NAME,
   FILE_UNCHANGED_STUB,
 } from '../../tools/FileReadTool/prompt.js'
-import { ToolSearchTool } from '../../tools/ToolSearchTool/ToolSearchTool.js'
+// ToolSearchTool directory removed — stub below
+const ToolSearchTool = null as any
 import type { AgentId } from '../../types/ids.js'
 import type {
   AssistantMessage,
@@ -1298,7 +1299,7 @@ async function streamCompactSummary({
         ? uniqBy(
           [
             FileReadTool,
-            ToolSearchTool,
+            // ToolSearchTool removed — skipping
             ...context.options.tools.filter(t => t.isMcp),
           ],
           'name',

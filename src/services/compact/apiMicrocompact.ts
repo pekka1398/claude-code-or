@@ -1,11 +1,9 @@
 import { FILE_EDIT_TOOL_NAME } from 'src/tools/FileEditTool/constants.js'
 import { FILE_READ_TOOL_NAME } from 'src/tools/FileReadTool/prompt.js'
 import { FILE_WRITE_TOOL_NAME } from 'src/tools/FileWriteTool/prompt.js'
-import { GLOB_TOOL_NAME } from 'src/tools/GlobTool/prompt.js'
-import { GREP_TOOL_NAME } from 'src/tools/GrepTool/prompt.js'
-import { NOTEBOOK_EDIT_TOOL_NAME } from 'src/tools/NotebookEditTool/constants.js'
-import { WEB_FETCH_TOOL_NAME } from 'src/tools/WebFetchTool/prompt.js'
-import { WEB_SEARCH_TOOL_NAME } from 'src/tools/WebSearchTool/prompt.js'
+// GLOB_TOOL_NAME = 'glob', GREP_TOOL_NAME = 'grep', NOTEBOOK_EDIT_TOOL_NAME = 'notebook_edit',
+// WEB_FETCH_TOOL_NAME = 'web_fetch', WEB_SEARCH_TOOL_NAME = 'web_search'
+// (deleted tool dirs — using inline literals)
 import { SHELL_TOOL_NAMES } from 'src/utils/shell/shellToolUtils.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
 
@@ -18,17 +16,17 @@ const DEFAULT_TARGET_INPUT_TOKENS = 40_000 // Keep last 40k tokens like client-s
 
 const TOOLS_CLEARABLE_RESULTS = [
   ...SHELL_TOOL_NAMES,
-  GLOB_TOOL_NAME,
-  GREP_TOOL_NAME,
+  'glob',
+  'grep',
   FILE_READ_TOOL_NAME,
-  WEB_FETCH_TOOL_NAME,
-  WEB_SEARCH_TOOL_NAME,
+  'web_fetch',
+  'web_search',
 ]
 
 const TOOLS_CLEARABLE_USES = [
   FILE_EDIT_TOOL_NAME,
   FILE_WRITE_TOOL_NAME,
-  NOTEBOOK_EDIT_TOOL_NAME,
+  'notebook_edit',
 ]
 
 // Context management strategy types matching API documentation

@@ -1554,20 +1554,13 @@ async function run(): Promise<CommanderCommand> {
     // explicit opt-in; listing it in --tools signals intent. Runs BEFORE
     // initializeToolPermissionContext so getToolsForDefaultPreset() sees
     // the tool as enabled when computing the base-tools disallow filter.
-    // Conditional require avoids leaking the tool-name string into
-    // external builds.
+    // BriefTool directory removed — this block is now a no-op since the
+    // tool no longer exists.
     if ((feature('KAIROS') || feature('KAIROS_BRIEF')) && baseTools.length > 0) {
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const {
-        BRIEF_TOOL_NAME,
-        LEGACY_BRIEF_TOOL_NAME
-      } = require('./tools/BriefTool/prompt.js') as typeof import('./tools/BriefTool/prompt.js');
-      const {
-        isBriefEntitled
-      } = require('./tools/BriefTool/BriefTool.js') as typeof import('./tools/BriefTool/BriefTool.js');
-      /* eslint-enable @typescript-eslint/no-require-imports */
+      const BRIEF_TOOL_NAME = 'brief';
+      const LEGACY_BRIEF_TOOL_NAME = 'send_user_message';
       const parsed = parseToolListFromCLI(baseTools);
-      if ((parsed.includes(BRIEF_TOOL_NAME) || parsed.includes(LEGACY_BRIEF_TOOL_NAME)) && isBriefEntitled()) {
+      if (parsed.includes(BRIEF_TOOL_NAME) || parsed.includes(LEGACY_BRIEF_TOOL_NAME)) {
         setUserMsgOptIn(true);
       }
     }
@@ -1969,24 +1962,11 @@ async function run(): Promise<CommanderCommand> {
       }
     }
     maybeActivateBrief(options);
-    // defaultView: 'chat' is a persisted opt-in — check entitlement and set
-    // userMsgOptIn so the tool + prompt section activate. Interactive-only:
-    // defaultView is a display preference; SDK sessions have no display, and
-    // the assistant installer writes defaultView:'chat' to settings.local.json
-    // which would otherwise leak into --print sessions in the same directory.
-    // Runs right after maybeActivateBrief() so all startup opt-in paths fire
-    // BEFORE any isBriefEnabled() read below (proactive prompt's
-    // briefVisibility). A persisted 'chat' after a GB kill-switch falls
-    // through (entitlement fails).
+    // defaultView: 'chat' is a persisted opt-in — BriefTool directory removed,
+    // so this entitlement check is now a no-op. The setting is preserved but
+    // does not activate brief mode since the tool no longer exists.
     if ((feature('KAIROS') || feature('KAIROS_BRIEF')) && !getIsNonInteractiveSession() && !getUserMsgOptIn() && getInitialSettings().defaultView === 'chat') {
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const {
-        isBriefEntitled
-      } = require('./tools/BriefTool/BriefTool.js') as typeof import('./tools/BriefTool/BriefTool.js');
-      /* eslint-enable @typescript-eslint/no-require-imports */
-      if (isBriefEntitled()) {
-        setUserMsgOptIn(true);
-      }
+      // BriefTool removed — skip entitlement check
     }
     // Coordinator mode has its own system prompt and filters out Sleep, so
     // the generic proactive prompt would tell it to call a tool it can't
@@ -1994,9 +1974,8 @@ async function run(): Promise<CommanderCommand> {
     if ((feature('PROACTIVE') || feature('KAIROS')) && ((options as {
       proactive?: boolean;
     }).proactive || isEnvTruthy(process.env.CLAUDE_CODE_PROACTIVE))) {
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const briefVisibility = feature('KAIROS') || feature('KAIROS_BRIEF') ? (require('./tools/BriefTool/BriefTool.js') as typeof import('./tools/BriefTool/BriefTool.js')).isBriefEnabled() ? 'Call SendUserMessage at checkpoints to mark where things stand.' : 'The user will see any text you output.' : 'The user will see any text you output.';
-      /* eslint-enable @typescript-eslint/no-require-imports */
+      // BriefTool directory removed — brief is never enabled
+      const briefVisibility = 'The user will see any text you output.';
       const proactivePrompt = `\n# Proactive Mode\n\nYou are in proactive mode. Take initiative — explore, act, and make progress without waiting for instructions.\n\nStart by briefly greeting the user.\n\nYou will receive periodic <tick> prompts. These are check-ins. Do whatever seems most useful, or call Sleep if there's nothing to do. ${briefVisibility}`;
       appendSystemPrompt = appendSystemPrompt ? `${appendSystemPrompt}\n\n${proactivePrompt}` : proactivePrompt;
     }
@@ -4163,24 +4142,10 @@ function maybeActivateBrief(options: unknown): void {
   }).brief;
   const briefEnv = isEnvTruthy(process.env.CLAUDE_CODE_BRIEF);
   if (!briefFlag && !briefEnv) return;
-  // --brief / CLAUDE_CODE_BRIEF are explicit opt-ins: check entitlement,
-  // then set userMsgOptIn to activate the tool + prompt section. The env
-  // var also grants entitlement (isBriefEntitled() reads it), so setting
-  // CLAUDE_CODE_BRIEF=1 alone force-enables for dev/testing — no GB gate
-  // needed. initialIsBriefOnly reads getUserMsgOptIn() directly.
-  // Conditional require: static import would leak the tool name string
-  // into external builds via BriefTool.ts → prompt.ts.
-  /* eslint-disable @typescript-eslint/no-require-imports */
-  const {
-    isBriefEntitled
-  } = require('./tools/BriefTool/BriefTool.js') as typeof import('./tools/BriefTool/BriefTool.js');
-  /* eslint-enable @typescript-eslint/no-require-imports */
-  const entitled = isBriefEntitled();
-  if (entitled) {
-    setUserMsgOptIn(true);
-  }
-  // Fire unconditionally once intent is seen: enabled=false captures the
-  // "user tried but was gated" failure mode in Datadog.
+  // --brief / CLAUDE_CODE_BRIEF are explicit opt-ins, but BriefTool directory
+  // was removed — brief mode is no longer available. Log the attempt but do not
+  // activate.
+  const entitled = false;
   logEvent('tengu_brief_mode_enabled', {
     enabled: entitled,
     gated: !entitled,
