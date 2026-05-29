@@ -62,3 +62,20 @@ export const FAILED_FOOTER_TEXT = 'Something went wrong, please try again'
 export function wrapWithOsc8Link(text: string, url: string): string {
   return `\x1b]8;;${url}\x07${text}\x1b]8;;\x07`
 }
+
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`
+  const s = Math.floor(ms / 1000)
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  const remS = s % 60
+  if (m < 60) return remS > 0 ? `${m}m ${remS}s` : `${m}m`
+  const h = Math.floor(m / 60)
+  const remM = m % 60
+  return remM > 0 ? `${h}h ${remM}m` : `${h}h`
+}
+
+export function truncatePrompt(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text
+  return text.slice(0, maxLen - 1) + '\u2026'
+}

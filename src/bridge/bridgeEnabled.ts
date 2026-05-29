@@ -18,3 +18,11 @@ export async function getBridgeDisabledReason(): Promise<string | null> {
 export function isEnvLessBridgeEnabled(): boolean {
   return false
 }
+
+export function isCseShimEnabled(): boolean {
+  return false
+}
+
+export function checkBridgeMinVersion(): null {
+  return null
+}

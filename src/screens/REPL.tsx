@@ -61,7 +61,6 @@ import { PromptInputQueuedCommands } from '../components/PromptInput/PromptInput
 import { useRemoteSession } from '../hooks/useRemoteSession.js';
 import { SkillImprovementSurvey } from '../components/SkillImprovementSurvey.js';
 import { useSkillImprovementSurvey } from '../hooks/useSkillImprovementSurvey.js';
-import { useMoreRight } from '../moreright/useMoreRight.js';
 import { SpinnerWithVerb, BriefIdleStatus, type SpinnerMode } from '../components/Spinner.js';
 import { getSystemPrompt } from '../constants/prompts.js';
 import { buildEffectiveSystemPrompt } from '../utils/systemPrompt.js';
@@ -216,9 +215,7 @@ import { usePostCompactSurvey } from 'src/components/FeedbackSurvey/usePostCompa
 import { FeedbackSurvey } from 'src/components/FeedbackSurvey/FeedbackSurvey.js';
 import { useInstallMessages } from 'src/hooks/notifs/useInstallMessages.js';
 import { useAwaySummary } from 'src/hooks/useAwaySummary.js';
-import { useChromeExtensionNotification } from 'src/hooks/useChromeExtensionNotification.js';
 import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketplaceNotification.js';
-import { usePromptsFromClaudeInChrome } from 'src/hooks/usePromptsFromClaudeInChrome.js';
 import { getTipToShowOnSpinner, recordShownTip } from 'src/services/tips/tipScheduler.js';
 import type { Theme } from 'src/utils/theme.js';
 import { checkAndDisableBypassPermissionsIfNeeded, checkAndDisableAutoModeIfNeeded, useKickOffCheckAndDisableBypassPermissionsIfNeeded, useKickOffCheckAndDisableAutoModeIfNeeded } from 'src/utils/permissions/bypassPermissionsKillswitch.js';
@@ -574,7 +571,6 @@ export function REPL({
   // Env-var gates hoisted to mount-time — isEnvTruthy does toLowerCase+trim+
   // includes, and these were on the render path (hot during PageUp spam).
   const titleDisabled = useMemo(() => isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_TERMINAL_TITLE), []);
-  const moreRightEnabled = useMemo(() => ("external" as string) === 'ant' && isEnvTruthy(process.env.CLAUDE_MORERIGHT), []);
   const disableVirtualScroll = useMemo(() => isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_VIRTUAL_SCROLL), []);
   const disableMessageActions = feature('MESSAGE_ACTIONS') ?
     
@@ -733,7 +729,6 @@ export function REPL({
   useNpmDeprecationNotification();
   useAntOrgWarningNotification();
   useInstallMessages();
-  useChromeExtensionNotification();
   useOfficialMarketplaceNotification();
   useLspInitializationNotification();
   useTeammateLifecycleNotification();
@@ -752,10 +747,6 @@ export function REPL({
   }, [localTools, initialTools]);
 
   const tasksV2 = useTasksV2WithCollapseEffect();
-
-  // Allow Claude in Chrome MCP to send prompts through MCP notifications
-  // and sync permission mode changes to the Chrome extension
-  usePromptsFromClaudeInChrome(isRemoteSession ? EMPTY_MCP_CLIENTS : mcpClients, toolPermissionContext.mode);
 
   // Initialize swarm features: teammate hooks and context
   // Handles both fresh spawns and resumed teammate sessions
@@ -1576,17 +1567,6 @@ export function REPL({
     const inProgressToolUses = contentArr.filter(b => b.type === 'tool_use' && b.id && inProgressToolUseIDs.has(b.id));
     return inProgressToolUses.length > 0 && inProgressToolUses.every(b => b.type === 'tool_use' && b.name === SLEEP_TOOL_NAME);
   }, [messages, inProgressToolUseIDs]);
-  const {
-    onBeforeQuery: mrOnBeforeQuery,
-    onTurnComplete: mrOnTurnComplete,
-    render: mrRender
-  } = useMoreRight({
-    enabled: moreRightEnabled,
-    setMessages,
-    inputValue,
-    setInputValue,
-    setToolJSX
-  });
   const showSpinner = (!toolJSX || toolJSX.showSpinner === true) && toolUseConfirmQueue.length === 0 && promptQueue.length === 0 && (
     // Show spinner during input processing, API call, while teammates are running,
     // or while pending task notifications are queued (prevents spinner bounce between consecutive notifications)
@@ -2060,7 +2040,6 @@ export function REPL({
     setAbortController(null);
 
     // forceEnd() skips the finally path — fire directly (aborted=true).
-    void mrOnTurnComplete(messagesRef.current, true);
   }
 
   // Function to handle queued command when canceling a permission request
@@ -2786,9 +2765,6 @@ export function REPL({
       // React's scheduler (previously cost 20-56ms per prompt; the 56ms
       // case was a GC pause caught during the await).
       const latestMessages = messagesRef.current;
-      if (input) {
-        await mrOnBeforeQuery(input, latestMessages, newMessages.length);
-      }
 
       // Pass full conversation history to callback
       if (onBeforeQueryCallback && input) {
@@ -2809,7 +2785,6 @@ export function REPL({
         // if onQueryImpl throws. onTurnComplete is called separately in
         // onQueryImpl only on successful completion.
         resetLoadingState();
-        await mrOnTurnComplete(messagesRef.current, abortController.signal.aborted);
 
         // Notify bridge clients that the turn is complete so mobile apps
         // can stop the spark animation and show post-turn UI.
@@ -2903,7 +2878,7 @@ export function REPL({
         }
       }
     }
-  }, [onQueryImpl, setAppState, resetLoadingState, queryGuard, mrOnBeforeQuery, mrOnTurnComplete]);
+  }, [onQueryImpl, setAppState, resetLoadingState, queryGuard]);
 
   // Handle initial message (from CLI args or plan mode exit with context clear)
   // This effect runs when isLoading becomes false and there's a pending message
@@ -4733,8 +4708,6 @@ export function REPL({
               onSessionReady: appendWhenIdle
             }).then(appendStdout).catch(logError);
           }} /> : null}
-
-          {mrRender()}
 
           {!toolJSX?.shouldHidePromptInput && !focusedInputDialog && !isExiting && !disabled && !cursor && <>
             {autoRunIssueReason && <AutoRunIssueNotification onRun={handleAutoRunIssue} onCancel={handleCancelAutoRunIssue} reason={getAutoRunIssueReasonText(autoRunIssueReason)} />}

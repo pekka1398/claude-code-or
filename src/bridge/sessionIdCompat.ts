@@ -11,3 +11,7 @@ export function toInfraSessionId(id: string): string {
   if (!id.startsWith('session_')) return id
   return 'cse_' + id.slice('session_'.length)
 }
+
+export function setCseShimGate(_enabled: boolean): void {
+  // no-op stub
+}

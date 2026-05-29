@@ -36,3 +36,18 @@ export type BridgeCoreParams = {
   debugFile?: string
   sessionTimeoutMs?: number
 }
+
+export function initBridgeCore(_params: BridgeCoreParams): ReplBridgeHandle {
+  return {
+    bridgeSessionId: '',
+    environmentId: '',
+    sessionIngressUrl: '',
+    writeMessages: () => {},
+    writeSdkMessages: () => {},
+    sendControlRequest: () => {},
+    sendControlResponse: () => {},
+    sendControlCancelRequest: () => {},
+    sendResult: () => {},
+    teardown: async () => {},
+  }
+}

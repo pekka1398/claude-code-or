@@ -29,3 +29,22 @@ export function decodeJwtExpiry(token: string): number | null {
   }
   return null
 }
+
+export function createTokenRefreshScheduler(_opts: {
+  getAccessToken: () => string | undefined | Promise<string | undefined>
+  onRefresh: (sessionId: string, oauthToken: string) => void
+  label: string
+  refreshBufferMs?: number
+}): {
+  schedule: (sessionId: string, token: string) => void
+  scheduleFromExpiresIn: (sessionId: string, expiresInSeconds: number) => void
+  cancel: (sessionId: string) => void
+  cancelAll: () => void
+} {
+  return {
+    schedule: () => {},
+    scheduleFromExpiresIn: () => {},
+    cancel: () => {},
+    cancelAll: () => {},
+  }
+}

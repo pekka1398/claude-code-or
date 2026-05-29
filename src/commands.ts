@@ -19,7 +19,6 @@ import keybindings from './commands/keybindings/index.js'
 import mcp from './commands/mcp/index.js'
 import mobile from './commands/mobile/index.js'
 import model from './commands/model/index.js'
-import outputStyle from './commands/output-style/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import rename from './commands/rename/index.js'
@@ -102,7 +101,6 @@ const COMMANDS = memoize((): Command[] => [
   mcp,
   mobile,
   model,
-  outputStyle,
   permissions,
   plan,
   rename,
