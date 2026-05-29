@@ -1,0 +1,12 @@
+{
+  "name": "ai-shell",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "ai-shell": "./bin/ai-shell.ts"
+  },
+  "scripts": {
+    "dev": "bun run bin/ai-shell.ts -c 'echo hello'",
+    "test": "bun test"
+  }
+}

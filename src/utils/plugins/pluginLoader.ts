@@ -3090,17 +3090,20 @@ export function mergePluginSources(sources: {
  *   - errors: Array of loading errors with source information
  */
 export const loadAllPlugins = memoize(async (): Promise<PluginLoadResult> => {
-  const result = await assemblePluginLoadResult(() =>
-    loadPluginsFromMarketplaces({ cacheOnly: false }),
-  )
-  // A fresh full-load result is strictly valid for cache-only callers
-  // (both variants share assemblePluginLoadResult). Warm the separate
-  // memoize so refreshActivePlugins()'s downstream getPluginCommands() /
-  // getAgentDefinitionsWithOverrides() — which now call
-  // loadAllPluginsCacheOnly — see just-cloned plugins instead of reading
-  // an installed_plugins.json that nothing writes mid-session.
-  loadAllPluginsCacheOnly.cache?.set(undefined, Promise.resolve(result))
-  return result
+  // STUBBED: Plugin system disabled. Returns empty results to allow
+  // incremental removal of plugin-dependent code without breaking startup.
+  return {
+    enabled: [],
+    disabled: [],
+    errors: [],
+    warnings: [],
+    commands: [],
+    skills: [],
+    agents: [],
+    hooks: [],
+    outputStyles: [],
+    marketplaceResults: [],
+  }
 })
 
 /**

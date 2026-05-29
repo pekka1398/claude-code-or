@@ -76,7 +76,7 @@ export async function findSuitableShell(): Promise<string> {
   if (shellOverride) {
     // Validate it's a supported shell type
     const isSupported =
-      shellOverride.includes('bash') || shellOverride.includes('zsh')
+      shellOverride.includes('bash') || shellOverride.includes('zsh') || shellOverride.includes('ai-shell')
     if (isSupported && isExecutable(shellOverride)) {
       logForDebugging(`Using shell override: ${shellOverride}`)
       return shellOverride
