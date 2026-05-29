@@ -6,7 +6,6 @@ import type {
 import type { CanUseToolFn } from './hooks/useCanUseTool.js'
 import { FallbackTriggeredError } from './services/api/withRetry.js'
 import {
-  calculateTokenWarningState,
   isAutoCompactEnabled,
   type AutoCompactTrackingState,
 } from './services/compact/autoCompact.js'
@@ -39,7 +38,6 @@ import type {
 } from './types/message.js'
 import { logError } from './utils/log.js'
 import {
-  PROMPT_TOO_LONG_ERROR_MESSAGE,
   isPromptTooLongMessage,
 } from './services/api/errors.js'
 import { logAntError, logForDebugging } from './utils/debug.js'
@@ -628,27 +626,6 @@ async function* queryLoop(
     // it predates the experiment and is already the control-arm baseline.
     const mediaRecoveryEnabled =
       reactiveCompact?.isReactiveCompactEnabled() ?? false
-    if (
-      !compactionResult &&
-      querySource !== 'compact' &&
-      querySource !== 'session_memory' &&
-      !(
-        reactiveCompact?.isReactiveCompactEnabled() && isAutoCompactEnabled()
-      ) &&
-      !collapseOwnsIt
-    ) {
-      const { isAtBlockingLimit } = calculateTokenWarningState(
-        tokenCountWithEstimation(messagesForQuery) - snipTokensFreed,
-        toolUseContext.options.mainLoopModel,
-      )
-      if (isAtBlockingLimit) {
-        yield createAssistantAPIErrorMessage({
-          content: PROMPT_TOO_LONG_ERROR_MESSAGE,
-          error: 'invalid_request',
-        })
-        return { reason: 'blocking_limit' }
-      }
-    }
 
     let attemptWithFallback = true
 

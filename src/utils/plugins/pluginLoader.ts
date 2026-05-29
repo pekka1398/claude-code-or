@@ -3133,16 +3133,7 @@ export const loadAllPlugins = memoize(async (): Promise<PluginLoadResult> => {
  * the full loader don't get plugin-cache-miss from their downstream
  * cache-only consumers.
  */
-export const loadAllPluginsCacheOnly = memoize(
-  async (): Promise<PluginLoadResult> => {
-    if (isEnvTruthy(process.env.CLAUDE_CODE_SYNC_PLUGIN_INSTALL)) {
-      return loadAllPlugins()
-    }
-    return assemblePluginLoadResult(() =>
-      loadPluginsFromMarketplaces({ cacheOnly: true }),
-    )
-  },
-)
+export const loadAllPluginsCacheOnly = loadAllPlugins
 
 /**
  * Shared body of loadAllPlugins and loadAllPluginsCacheOnly.

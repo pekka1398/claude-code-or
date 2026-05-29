@@ -9,7 +9,6 @@ import { API_ERROR_MESSAGE_PREFIX, API_TIMEOUT_ERROR_MESSAGE, CREDIT_BALANCE_TOO
 import { isEmptyMessageText, NO_RESPONSE_REQUESTED } from '../../utils/messages.js';
 import { getUpgradeMessage } from '../../utils/model/contextWindowUpgradeCheck.js';
 import { getDefaultSonnetModel, renderModelName } from '../../utils/model/model.js';
-import { isMacOsKeychainLocked } from '../../utils/secureStorage/macOsKeychainStorage.js';
 import { CtrlOToExpand } from '../CtrlOToExpand.js';
 import { InterruptedByUser } from '../InterruptedByUser.js';
 import { Markdown } from '../Markdown.js';
@@ -26,23 +25,15 @@ type Props = {
   onOpenRateLimitOptions?: () => void;
 };
 function InvalidApiKeyMessage() {
-  const $ = _c(2);
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = isMacOsKeychainLocked();
+    t0 = <MessageResponse><Box flexDirection="column"><Text color="error">{INVALID_API_KEY_ERROR_MESSAGE}</Text></Box></MessageResponse>;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const isKeychainLocked = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <MessageResponse><Box flexDirection="column"><Text color="error">{INVALID_API_KEY_ERROR_MESSAGE}</Text>{isKeychainLocked && <Text dimColor={true}>· Run in another terminal: security unlock-keychain</Text>}</Box></MessageResponse>;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
+  return t0;
 }
 export function AssistantTextMessage(t0) {
   const $ = _c(34);

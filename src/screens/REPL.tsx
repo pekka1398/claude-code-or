@@ -59,7 +59,6 @@ import type { PromptRequest, PromptResponse } from '../types/hooks.js';
 import PromptInput from '../components/PromptInput/PromptInput.js';
 import { PromptInputQueuedCommands } from '../components/PromptInput/PromptInputQueuedCommands.js';
 import { useRemoteSession } from '../hooks/useRemoteSession.js';
-import { useAssistantHistory } from '../hooks/useAssistantHistory.js';
 import { SkillImprovementSurvey } from '../components/SkillImprovementSurvey.js';
 import { useSkillImprovementSurvey } from '../hooks/useSkillImprovementSurvey.js';
 import { useMoreRight } from '../moreright/useMoreRight.js';
@@ -138,7 +137,6 @@ import { useMergedTools } from '../hooks/useMergedTools.js';
 import { mergeAndFilterTools } from '../utils/toolPool.js';
 import { useMergedCommands } from '../hooks/useMergedCommands.js';
 import { useSkillsChange } from '../hooks/useSkillsChange.js';
-import { useManagePlugins } from '../hooks/useManagePlugins.js';
 import { Messages } from '../components/Messages.js';
 import { TaskListV2 } from '../components/TaskListV2.js';
 import { TeammateViewHeader } from '../components/TeammateViewHeader.js';
@@ -239,9 +237,6 @@ import { LspRecommendationMenu } from 'src/components/LspRecommendation/LspRecom
 import { useClaudeCodeHintRecommendation } from 'src/hooks/useClaudeCodeHintRecommendation.js';
 import { PluginHintMenu } from 'src/components/ClaudeCodeHint/PluginHintMenu.js';
 import { DesktopUpsellStartup, shouldShowDesktopUpsellStartup } from 'src/components/DesktopUpsell/DesktopUpsellStartup.js';
-import { usePluginInstallationStatus } from 'src/hooks/notifs/usePluginInstallationStatus.js';
-import { usePluginAutoupdateNotification } from 'src/hooks/notifs/usePluginAutoupdateNotification.js';
-import { performStartupChecks } from 'src/utils/plugins/performStartupChecks.js';
 import { UserTextMessage } from 'src/components/messages/UserTextMessage.js';
 import { AwsAuthStatusBox } from '../components/AwsAuthStatusBox.js';
 import { useRateLimitWarningNotification } from 'src/hooks/notifs/useRateLimitWarningNotification.js';
@@ -731,8 +726,6 @@ export function REPL({
     mcpClients
   });
   useAutoModeUnavailableNotification();
-  usePluginInstallationStatus();
-  usePluginAutoupdateNotification();
   useSettingsErrors();
   useRateLimitWarningNotification(mainLoopModel);
   useFastModeNotification();
@@ -758,24 +751,7 @@ export function REPL({
     return [...localTools, ...initialTools];
   }, [localTools, initialTools]);
 
-  // Initialize plugin management
-  useManagePlugins({
-    enabled: !isRemoteSession
-  });
   const tasksV2 = useTasksV2WithCollapseEffect();
-
-  // Start background plugin installations
-
-  // SECURITY: This code is guaranteed to run ONLY after the "trust this folder" dialog
-  // has been confirmed by the user. The trust dialog is shown in cli.tsx (line ~387)
-  // before the REPL component is rendered. The dialog blocks execution until the user
-  // accepts, and only then is the REPL component mounted and this effect runs.
-  // This ensures that plugin installations from repository and user settings only
-  // happen after explicit user consent to trust the current working directory.
-  useEffect(() => {
-    if (isRemoteSession) return;
-    void performStartupChecks(setAppState);
-  }, [setAppState, isRemoteSession]);
 
   // Allow Claude in Chrome MCP to send prompts through MCP notifications
   // and sync permission mode changes to the Chrome extension
@@ -1252,20 +1228,10 @@ export function REPL({
       repinScroll();
     }
   }, [lastMsgIsHuman, lastMsg, repinScroll]);
-  // Assistant-chat: lazy-load remote history on scroll-up. No-op unless
-  // KAIROS build + config.viewerOnly. feature() is build-time constant so
-  // the branch is dead-code-eliminated in non-KAIROS builds (same pattern
-  // as useUnseenDivider above).
+  // Assistant-chat lazy-load removed (KAIROS feature disabled).
   const {
     maybeLoadOlder
-  } = feature('KAIROS') ?
-      
-      useAssistantHistory({
-        config: remoteSessionConfig,
-        setMessages,
-        scrollRef,
-        onPrepend: shiftDivider
-      }) : HISTORY_STUB;
+  } = HISTORY_STUB;
   // Compose useUnseenDivider's callbacks with the lazy-load trigger.
   const composedOnScroll = useCallback((sticky: boolean, handle: ScrollBoxHandle) => {
     lastUserScrollTsRef.current = Date.now();

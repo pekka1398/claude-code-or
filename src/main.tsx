@@ -88,7 +88,6 @@ import { exitWithError, exitWithMessage, getRenderContext, renderAndRun, showSet
 /* eslint-enable @typescript-eslint/no-require-imports */
 import { checkQuotaStatus } from './services/claudeAiLimits.js';
 import { getMcpToolsCommandsAndResources, prefetchAllMcpResources } from './services/mcp/client.js';
-import { VALID_INSTALLABLE_SCOPES, VALID_UPDATE_SCOPES } from './services/plugins/pluginCliCommands.js';
 import { initBundledSkills } from './skills/bundled/index.js';
 import type { AgentColorName } from './tools/AgentTool/agentColorManager.js';
 import { getActiveAgentsFromList, getAgentDefinitionsWithOverrides, isBuiltInAgent, isCustomAgent, parseAgentsFromJson } from './tools/AgentTool/loadAgentsDir.js';
@@ -113,11 +112,6 @@ import { getDefaultMainLoopModel, getUserSpecifiedModelSetting, normalizeModelSt
 import { ensureModelStringsInitialized } from './utils/model/modelStrings.js';
 import { PERMISSION_MODES } from './utils/permissions/PermissionMode.js';
 import { checkAndDisableBypassPermissions, getAutoModeEnabledStateIfCached, initializeToolPermissionContext, initialPermissionModeFromCLI, isDefaultPermissionModeAuto, parseToolListFromCLI, removeDangerousPermissions, stripDangerousPermissionsForAutoMode, verifyAutoModeGateAccess } from './utils/permissions/permissionSetup.js';
-import { cleanupOrphanedPluginVersionsInBackground } from './utils/plugins/cacheUtils.js';
-import { initializeVersionedPlugins } from './utils/plugins/installedPluginsManager.js';
-import { getManagedPluginNames } from './utils/plugins/managedPlugins.js';
-import { getGlobExclusionsForPluginCache } from './utils/plugins/orphanedPluginFilter.js';
-import { getPluginSeedDirs } from './utils/plugins/pluginDirectories.js';
 import { countFilesRoundedRg } from './utils/ripgrep.js';
 import { processSessionStartHooks, processSetupHooks } from './utils/sessionStart.js';
 import { cacheSessionTitle, getSessionIdFromLog, loadTranscriptFromFile, saveAgentSetting, saveMode, searchSessionsByCustomTitle, sessionIdExists } from './utils/sessionStorage.js';
@@ -126,7 +120,6 @@ import { getInitialSettings, getManagedSettingsKeysForLogging, getSettingsForSou
 import { resetSettingsCache } from './utils/settings/settingsCache.js';
 import type { ValidationError } from './utils/settings/validation.js';
 import { DEFAULT_TASKS_MODE_TASK_LIST_ID, TASK_STATUSES } from './utils/tasks.js';
-import { logPluginLoadErrors, logPluginsEnabledForSession } from './utils/telemetry/pluginTelemetry.js';
 import { logSkillsLoaded } from './utils/telemetry/skillLoadedEvent.js';
 import { generateTempFilePath } from './utils/tempfile.js';
 import { validateUuid } from './utils/uuid.js';
@@ -159,7 +152,7 @@ import { setCwd } from 'src/utils/Shell.js';
 import { type ProcessedResume, processResumedConversation } from 'src/utils/sessionRestore.js';
 import { parseSettingSourcesFlag } from 'src/utils/settings/constants.js';
 import { plural } from 'src/utils/stringUtils.js';
-import { type ChannelEntry, getInitialMainLoopModel, getIsNonInteractiveSession, getSdkBetas, getSessionId, getUserMsgOptIn, setAllowedChannels, setAllowedSettingSources, setChromeFlagOverride, setClientType, setCwdState, setFlagSettingsPath, setInitialMainLoopModel, setInlinePlugins, setIsInteractive, setKairosActive, setOriginalCwd, setQuestionPreviewFormat, setSdkBetas, setSessionBypassPermissionsMode, setSessionPersistenceDisabled, setSessionSource, setUserMsgOptIn, switchSession } from './bootstrap/state.js';
+import { type ChannelEntry, getInitialMainLoopModel, getIsNonInteractiveSession, getSdkBetas, getSessionId, getUserMsgOptIn, setAllowedChannels, setAllowedSettingSources, setChromeFlagOverride, setClientType, setCwdState, setFlagSettingsPath, setInitialMainLoopModel, setIsInteractive, setKairosActive, setOriginalCwd, setQuestionPreviewFormat, setSdkBetas, setSessionBypassPermissionsMode, setSessionPersistenceDisabled, setSessionSource, setUserMsgOptIn, switchSession } from './bootstrap/state.js';
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const autoModeStateModule = feature('TRANSCRIPT_CLASSIFIER') ? require('./utils/permissions/autoModeState.js') as typeof import('./utils/permissions/autoModeState.js') : null;
@@ -272,14 +265,6 @@ if (("external" as string) !== 'ant' && isBeingDebugged()) {
 function logSessionTelemetry(): void {
   const model = parseUserSpecifiedModel(getInitialMainLoopModel() ?? getDefaultMainLoopModel());
   void logSkillsLoaded(getCwd(), getContextWindowForModel(model, getSdkBetas()));
-  void loadAllPluginsCacheOnly().then(({
-    enabled,
-    errors
-  }) => {
-    const managedNames = getManagedPluginNames();
-    logPluginsEnabledForSession(enabled, managedNames, getPluginSeedDirs());
-    logPluginLoadErrors(errors, managedNames);
-  }).catch(err => logError(err));
 }
 function getCertEnvVarTelemetry(): Record<string, boolean> {
   const result: Record<string, boolean> = {};
@@ -773,11 +758,7 @@ async function run(): Promise<CommanderCommand> {
     // before .option('--plugin-dir', ...) in the chain — extra-typings
     // builds the type as options are added. Narrow with a runtime guard;
     // the collect accumulator + [] default guarantee string[] in practice.
-    const pluginDir = thisCommand.getOptionValue('pluginDir');
-    if (Array.isArray(pluginDir) && pluginDir.length > 0 && pluginDir.every(p => typeof p === 'string')) {
-      setInlinePlugins(pluginDir);
-      clearPluginCache('preAction: --plugin-dir inline plugins');
-    }
+    // --plugin-dir option removed (plugin system disabled)
     runMigrations();
     profileCheckpoint('preAction_after_migrations');
 
@@ -2327,23 +2308,7 @@ async function run(): Promise<CommanderCommand> {
     // --bare / SIMPLE: skip plugin version sync + orphan cleanup. These
     // are install/upgrade bookkeeping that scripted calls don't need —
     // the next interactive session will reconcile. The await here was
-    // blocking -p on a marketplace round-trip.
-    if (isBareMode()) {
-      // skip — no-op
-    } else if (isNonInteractiveSession) {
-      // In headless mode, await to ensure plugin sync completes before CLI exits
-      await initializeVersionedPlugins();
-      profileCheckpoint('action_after_plugins_init');
-      void cleanupOrphanedPluginVersionsInBackground().then(() => getGlobExclusionsForPluginCache());
-    } else {
-      // In interactive mode, fire-and-forget — this is purely bookkeeping
-      // that doesn't affect runtime behavior of the current session
-      void initializeVersionedPlugins().then(async () => {
-        profileCheckpoint('action_after_plugins_init');
-        await cleanupOrphanedPluginVersionsInBackground();
-        void getGlobExclusionsForPluginCache();
-      });
-    }
+    // Plugin system disabled — skip version sync + orphan cleanup
     const setupTrigger = initOnly || init ? 'init' : maintenance ? 'maintenance' : null;
     if (initOnly) {
       applyConfigEnvironmentVariables();
@@ -3668,127 +3633,7 @@ async function run(): Promise<CommanderCommand> {
    * @param error The error that occurred
    * @param action Description of the action that failed
    */
-  // Hidden flag on all plugin/marketplace subcommands to target cowork_plugins.
-  const coworkOption = () => new Option('--cowork', 'Use cowork_plugins directory').hideHelp();
-
-  // Plugin validate command
-  const pluginCmd = program.command('plugin').alias('plugins').description('Manage Claude Code plugins').configureHelp(createSortedHelpConfig());
-  pluginCmd.command('validate <path>').description('Validate a plugin or marketplace manifest').addOption(coworkOption()).action(async (manifestPath: string, options: {
-    cowork?: boolean;
-  }) => {
-    const {
-      pluginValidateHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginValidateHandler(manifestPath, options);
-  });
-
-  // Plugin list command
-  pluginCmd.command('list').description('List installed plugins').option('--json', 'Output as JSON').option('--available', 'Include available plugins from marketplaces (requires --json)').addOption(coworkOption()).action(async (options: {
-    json?: boolean;
-    available?: boolean;
-    cowork?: boolean;
-  }) => {
-    const {
-      pluginListHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginListHandler(options);
-  });
-
-  // Marketplace subcommands
-  const marketplaceCmd = pluginCmd.command('marketplace').description('Manage Claude Code marketplaces').configureHelp(createSortedHelpConfig());
-  marketplaceCmd.command('add <source>').description('Add a marketplace from a URL, path, or GitHub repo').addOption(coworkOption()).option('--sparse <paths...>', 'Limit checkout to specific directories via git sparse-checkout (for monorepos). Example: --sparse .claude-plugin plugins').option('--scope <scope>', 'Where to declare the marketplace: user (default), project, or local').action(async (source: string, options: {
-    cowork?: boolean;
-    sparse?: string[];
-    scope?: string;
-  }) => {
-    const {
-      marketplaceAddHandler
-    } = await import('./cli/handlers/plugins.js');
-    await marketplaceAddHandler(source, options);
-  });
-  marketplaceCmd.command('list').description('List all configured marketplaces').option('--json', 'Output as JSON').addOption(coworkOption()).action(async (options: {
-    json?: boolean;
-    cowork?: boolean;
-  }) => {
-    const {
-      marketplaceListHandler
-    } = await import('./cli/handlers/plugins.js');
-    await marketplaceListHandler(options);
-  });
-  marketplaceCmd.command('remove <name>').alias('rm').description('Remove a configured marketplace').addOption(coworkOption()).action(async (name: string, options: {
-    cowork?: boolean;
-  }) => {
-    const {
-      marketplaceRemoveHandler
-    } = await import('./cli/handlers/plugins.js');
-    await marketplaceRemoveHandler(name, options);
-  });
-  marketplaceCmd.command('update [name]').description('Update marketplace(s) from their source - updates all if no name specified').addOption(coworkOption()).action(async (name: string | undefined, options: {
-    cowork?: boolean;
-  }) => {
-    const {
-      marketplaceUpdateHandler
-    } = await import('./cli/handlers/plugins.js');
-    await marketplaceUpdateHandler(name, options);
-  });
-
-  // Plugin install command
-  pluginCmd.command('install <plugin>').alias('i').description('Install a plugin from available marketplaces (use plugin@marketplace for specific marketplace)').option('-s, --scope <scope>', 'Installation scope: user, project, or local', 'user').addOption(coworkOption()).action(async (plugin: string, options: {
-    scope?: string;
-    cowork?: boolean;
-  }) => {
-    const {
-      pluginInstallHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginInstallHandler(plugin, options);
-  });
-
-  // Plugin uninstall command
-  pluginCmd.command('uninstall <plugin>').alias('remove').alias('rm').description('Uninstall an installed plugin').option('-s, --scope <scope>', 'Uninstall from scope: user, project, or local', 'user').option('--keep-data', "Preserve the plugin's persistent data directory (~/.claude/plugins/data/{id}/)").addOption(coworkOption()).action(async (plugin: string, options: {
-    scope?: string;
-    cowork?: boolean;
-    keepData?: boolean;
-  }) => {
-    const {
-      pluginUninstallHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginUninstallHandler(plugin, options);
-  });
-
-  // Plugin enable command
-  pluginCmd.command('enable <plugin>').description('Enable a disabled plugin').option('-s, --scope <scope>', `Installation scope: ${VALID_INSTALLABLE_SCOPES.join(', ')} (default: auto-detect)`).addOption(coworkOption()).action(async (plugin: string, options: {
-    scope?: string;
-    cowork?: boolean;
-  }) => {
-    const {
-      pluginEnableHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginEnableHandler(plugin, options);
-  });
-
-  // Plugin disable command
-  pluginCmd.command('disable [plugin]').description('Disable an enabled plugin').option('-a, --all', 'Disable all enabled plugins').option('-s, --scope <scope>', `Installation scope: ${VALID_INSTALLABLE_SCOPES.join(', ')} (default: auto-detect)`).addOption(coworkOption()).action(async (plugin: string | undefined, options: {
-    scope?: string;
-    cowork?: boolean;
-    all?: boolean;
-  }) => {
-    const {
-      pluginDisableHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginDisableHandler(plugin, options);
-  });
-
-  // Plugin update command
-  pluginCmd.command('update <plugin>').description('Update a plugin to the latest version (restart required to apply)').option('-s, --scope <scope>', `Installation scope: ${VALID_UPDATE_SCOPES.join(', ')} (default: user)`).addOption(coworkOption()).action(async (plugin: string, options: {
-    scope?: string;
-    cowork?: boolean;
-  }) => {
-    const {
-      pluginUpdateHandler
-    } = await import('./cli/handlers/plugins.js');
-    await pluginUpdateHandler(plugin, options);
-  });
-  // END ANT-ONLY
+  // Plugin CLI subcommands removed (plugin system disabled)
 
   // Setup token command
   program.command('setup-token').description('Set up a long-lived authentication token (requires Claude subscription)').action(async () => {

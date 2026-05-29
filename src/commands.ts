@@ -119,8 +119,6 @@ import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import branch from './commands/branch/index.js'
 import agents from './commands/agents/index.js'
-import plugin from './commands/plugin/index.js'
-import reloadPlugins from './commands/reload-plugins/index.js'
 import rewind from './commands/rewind/index.js'
 import heapDump from './commands/heapdump/index.js'
 import mockLimits from './commands/mock-limits/index.js'
@@ -146,12 +144,6 @@ import {
   getDynamicSkills,
 } from './skills/loadSkillsDir.js'
 import { getBundledSkills } from './skills/bundledSkills.js'
-import {
-  getPluginCommands,
-  clearPluginCommandCache,
-  getPluginSkills,
-  clearPluginSkillsCache,
-} from './utils/plugins/loadPluginCommands.js'
 import memoize from 'lodash-es/memoize.js'
 import { isUsing3PServices, isClaudeAISubscriber } from './utils/auth.js'
 import { isFirstPartyAnthropicBaseUrl } from './utils/model/providers.js'
@@ -270,10 +262,8 @@ const COMMANDS = memoize((): Command[] => [
   mobile,
   model,
   outputStyle,
-  plugin,
   pr_comments,
   releaseNotes,
-  reloadPlugins,
   rename,
   resume,
   session,
@@ -325,32 +315,23 @@ export const builtInCommandNames = memoize(
 
 async function getSkills(cwd: string): Promise<{
   skillDirCommands: Command[]
-  pluginSkills: Command[]
   bundledSkills: Command[]
 }> {
   try {
-    const [skillDirCommands, pluginSkills] = await Promise.all([
-      getSkillDirCommands(cwd).catch(err => {
-        logError(toError(err))
-        logForDebugging(
-          'Skill directory commands failed to load, continuing without them',
-        )
-        return []
-      }),
-      getPluginSkills().catch(err => {
-        logError(toError(err))
-        logForDebugging('Plugin skills failed to load, continuing without them')
-        return []
-      }),
-    ])
+    const skillDirCommands = await getSkillDirCommands(cwd).catch(err => {
+      logError(toError(err))
+      logForDebugging(
+        'Skill directory commands failed to load, continuing without them',
+      )
+      return []
+    })
     // Bundled skills are registered synchronously at startup
     const bundledSkills = getBundledSkills()
     logForDebugging(
-      `getSkills returning: ${skillDirCommands.length} skill dir commands, ${pluginSkills.length} plugin skills, ${bundledSkills.length} bundled skills`,
+      `getSkills returning: ${skillDirCommands.length} skill dir commands, ${bundledSkills.length} bundled skills`,
     )
     return {
       skillDirCommands,
-      pluginSkills,
       bundledSkills,
     }
   } catch (err) {
@@ -359,7 +340,6 @@ async function getSkills(cwd: string): Promise<{
     logForDebugging('Unexpected error in getSkills, returning empty')
     return {
       skillDirCommands: [],
-      pluginSkills: [],
       bundledSkills: [],
     }
   }
@@ -408,12 +388,10 @@ export function meetsAvailabilityRequirement(cmd: Command): boolean {
  */
 const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
   const [
-    { skillDirCommands, pluginSkills, bundledSkills },
-    pluginCommands,
+    { skillDirCommands, bundledSkills },
     workflowCommands,
   ] = await Promise.all([
     getSkills(cwd),
-    getPluginCommands(),
     Promise.resolve([]), // workflowCommands (WorkflowTool directory deleted)
   ])
 
@@ -421,8 +399,6 @@ const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
     ...bundledSkills,
     ...skillDirCommands,
     ...workflowCommands,
-    ...pluginCommands,
-    ...pluginSkills,
     ...COMMANDS(),
   ]
 })
@@ -492,8 +468,6 @@ export function clearCommandMemoizationCaches(): void {
 
 export function clearCommandsCache(): void {
   clearCommandMemoizationCaches()
-  clearPluginCommandCache()
-  clearPluginSkillsCache()
   clearSkillCaches()
 }
 
