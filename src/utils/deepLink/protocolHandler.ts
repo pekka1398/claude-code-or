@@ -91,17 +91,8 @@ export async function handleUrlSchemeLaunch(): Promise<number | null> {
     return null
   }
 
-  try {
-    const { waitForUrlEvent } = await import('url-handler-napi')
-    const url = (waitForUrlEvent as any)(5000)
-    if (!url) {
-      return null
-    }
-    return await handleDeepLinkUri(await url as string)
-  } catch {
-    // NAPI module not available, or handleDeepLinkUri rejected — not a URL launch
-    return null
-  }
+  // url-handler-napi removed — no native URL event handling available.
+  return null
 }
 
 /**

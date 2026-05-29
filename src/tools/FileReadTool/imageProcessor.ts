@@ -39,25 +39,7 @@ export async function getImageProcessor(): Promise<SharpFunction> {
     return imageProcessorModule.default
   }
 
-  if (isInBundledMode()) {
-    // Try to load the native image processor first
-    try {
-      // Use the native image processor module
-      const imageProcessor = await import('image-processor-napi')
-      const sharpFn = (imageProcessor.sharp ?? imageProcessor.default) as SharpFunction
-      imageProcessorModule = { default: sharpFn }
-      return sharpFn
-    } catch {
-      // Fall back to sharp if native module is not available
-      
-      console.warn(
-        'Native image processor not available, falling back to sharp',
-      )
-    }
-  }
-
-  // Use sharp for non-bundled builds or as fallback.
-  // Single structural cast: our SharpFunction is a subset of sharp's actual type surface.
+  // Native image-processor-napi removed — always use sharp directly.
   const imported = (await import(
     'sharp'
   )) as unknown as MaybeDefault<SharpFunction>
